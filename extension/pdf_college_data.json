@@ -1,0 +1,1057 @@
+[
+  {
+    "pdfOrder": 1,
+    "instituteCode": "3192",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 2,
+    "instituteCode": "6298",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 3,
+    "instituteCode": "6187",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 4,
+    "instituteCode": "5108",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 5,
+    "instituteCode": "5108",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 6,
+    "instituteCode": "3154",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 7,
+    "instituteCode": "6311",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 8,
+    "instituteCode": "6122",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 9,
+    "instituteCode": "6834",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 10,
+    "instituteCode": "3188",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 11,
+    "instituteCode": "1105",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 12,
+    "instituteCode": "6206",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 13,
+    "instituteCode": "6770",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 14,
+    "instituteCode": "5151",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 15,
+    "instituteCode": "6206",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 16,
+    "instituteCode": "5151",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 17,
+    "instituteCode": "6187",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 18,
+    "instituteCode": "6769",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 19,
+    "instituteCode": "6275",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 20,
+    "instituteCode": "1107",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 21,
+    "instituteCode": "6138",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 22,
+    "instituteCode": "6770",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 23,
+    "instituteCode": "3146",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 24,
+    "instituteCode": "3188",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 25,
+    "instituteCode": "3187",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 26,
+    "instituteCode": "6634",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 27,
+    "instituteCode": "6298",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 28,
+    "instituteCode": "6275",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 29,
+    "instituteCode": "3188",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 30,
+    "instituteCode": "3175",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 31,
+    "instituteCode": "6834",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 32,
+    "instituteCode": "1105",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 33,
+    "instituteCode": "6794",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 34,
+    "instituteCode": "6307",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 35,
+    "instituteCode": "6185",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 36,
+    "instituteCode": "6184",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 37,
+    "instituteCode": "3175",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 38,
+    "instituteCode": "3146",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 39,
+    "instituteCode": "6144",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 40,
+    "instituteCode": "6144",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 41,
+    "instituteCode": "6138",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 42,
+    "instituteCode": "5181",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 43,
+    "instituteCode": "6203",
+    "coursePattern": "Robotics and Artificial Intelligence"
+  },
+  {
+    "pdfOrder": 44,
+    "instituteCode": "1114",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 45,
+    "instituteCode": "6138",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 46,
+    "instituteCode": "3192",
+    "coursePattern": "Computer Science and Engineering (Internet of Things and Cyber Security Including Block Chain Technology)"
+  },
+  {
+    "pdfOrder": 47,
+    "instituteCode": "3154",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 48,
+    "instituteCode": "6144",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 49,
+    "instituteCode": "6649",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 50,
+    "instituteCode": "6185",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 51,
+    "instituteCode": "6307",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 52,
+    "instituteCode": "6298",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 53,
+    "instituteCode": "3187",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 54,
+    "instituteCode": "6634",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 55,
+    "instituteCode": "6298",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 56,
+    "instituteCode": "6144",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 57,
+    "instituteCode": "5418",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 58,
+    "instituteCode": "6320",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 59,
+    "instituteCode": "6184",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 60,
+    "instituteCode": "5330",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 61,
+    "instituteCode": "3146",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 62,
+    "instituteCode": "3154",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 63,
+    "instituteCode": "5181",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 64,
+    "instituteCode": "3193",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 65,
+    "instituteCode": "5418",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 66,
+    "instituteCode": "3154",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 67,
+    "instituteCode": "1128",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 68,
+    "instituteCode": "3175",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 69,
+    "instituteCode": "6794",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 70,
+    "instituteCode": "5331",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 71,
+    "instituteCode": "6768",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 72,
+    "instituteCode": "3175",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 73,
+    "instituteCode": "5330",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 74,
+    "instituteCode": "3193",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 75,
+    "instituteCode": "1128",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 76,
+    "instituteCode": "6808",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 77,
+    "instituteCode": "5109",
+    "coursePattern": "Computer Science"
+  },
+  {
+    "pdfOrder": 78,
+    "instituteCode": "3146",
+    "coursePattern": "Computer Science and Engineering (Internet of Things and Cyber Security Including Block Chain Technology)"
+  },
+  {
+    "pdfOrder": 79,
+    "instituteCode": "6758",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 80,
+    "instituteCode": "6808",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 81,
+    "instituteCode": "6794",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 82,
+    "instituteCode": "6322",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 83,
+    "instituteCode": "1114",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 84,
+    "instituteCode": "3193",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 85,
+    "instituteCode": "1114",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 86,
+    "instituteCode": "1105",
+    "coursePattern": "Computer Science and Engineering (IoT)"
+  },
+  {
+    "pdfOrder": 87,
+    "instituteCode": "6991",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 88,
+    "instituteCode": "6991",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 89,
+    "instituteCode": "6635",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 90,
+    "instituteCode": "6275",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 91,
+    "instituteCode": "16351",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 92,
+    "instituteCode": "6206",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 93,
+    "instituteCode": "6759",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 94,
+    "instituteCode": "6991",
+    "coursePattern": "Computer Science"
+  },
+  {
+    "pdfOrder": 95,
+    "instituteCode": "1107",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 96,
+    "instituteCode": "6815",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 97,
+    "instituteCode": "6758",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 98,
+    "instituteCode": "6759",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 99,
+    "instituteCode": "5109",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 100,
+    "instituteCode": "6758",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 101,
+    "instituteCode": "6298",
+    "coursePattern": "Computer Engineering (Regional Language)"
+  },
+  {
+    "pdfOrder": 102,
+    "instituteCode": "5399",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 103,
+    "instituteCode": "5331",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 104,
+    "instituteCode": "1128",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 105,
+    "instituteCode": "6632",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 106,
+    "instituteCode": "6609",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 107,
+    "instituteCode": "5109",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 108,
+    "instituteCode": "1107",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 109,
+    "instituteCode": "5109",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 110,
+    "instituteCode": "4147",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 111,
+    "instituteCode": "5244",
+    "coursePattern": "Computer Science"
+  },
+  {
+    "pdfOrder": 112,
+    "instituteCode": "4104",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 113,
+    "instituteCode": "5109",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 114,
+    "instituteCode": "6322",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 115,
+    "instituteCode": "6319",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 116,
+    "instituteCode": "4147",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 117,
+    "instituteCode": "4134",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 118,
+    "instituteCode": "6609",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 119,
+    "instituteCode": "6628",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 120,
+    "instituteCode": "5330",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 121,
+    "instituteCode": "4147",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 122,
+    "instituteCode": "5331",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 123,
+    "instituteCode": "1121",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 124,
+    "instituteCode": "5125",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 125,
+    "instituteCode": "6324",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 126,
+    "instituteCode": "5104",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 127,
+    "instituteCode": "6319",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 128,
+    "instituteCode": "6632",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 129,
+    "instituteCode": "6767",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 130,
+    "instituteCode": "4134",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 131,
+    "instituteCode": "6771",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 132,
+    "instituteCode": "1121",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 133,
+    "instituteCode": "5390",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 134,
+    "instituteCode": "16357",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 135,
+    "instituteCode": "6324",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 136,
+    "instituteCode": "6635",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 137,
+    "instituteCode": "6632",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 138,
+    "instituteCode": "6628",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 139,
+    "instituteCode": "1123",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 140,
+    "instituteCode": "6767",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 141,
+    "instituteCode": "16355",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 142,
+    "instituteCode": "4196",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 143,
+    "instituteCode": "5130",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 144,
+    "instituteCode": "5399",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 145,
+    "instituteCode": "4613",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 146,
+    "instituteCode": "6767",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 147,
+    "instituteCode": "4104",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 148,
+    "instituteCode": "5177",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 149,
+    "instituteCode": "6767",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 150,
+    "instituteCode": "6635",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 151,
+    "instituteCode": "5390",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 152,
+    "instituteCode": "4134",
+    "coursePattern": "Artificial Intelligence"
+  },
+  {
+    "pdfOrder": 153,
+    "instituteCode": "4151",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 154,
+    "instituteCode": "16355",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 155,
+    "instituteCode": "6795",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 156,
+    "instituteCode": "5125",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 157,
+    "instituteCode": "16355",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 158,
+    "instituteCode": "6715",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 159,
+    "instituteCode": "5390",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 160,
+    "instituteCode": "5177",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 161,
+    "instituteCode": "4104",
+    "coursePattern": "Computer Technology"
+  },
+  {
+    "pdfOrder": 162,
+    "instituteCode": "5182",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 163,
+    "instituteCode": "1116",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 164,
+    "instituteCode": "5182",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 165,
+    "instituteCode": "4613",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 166,
+    "instituteCode": "5177",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 167,
+    "instituteCode": "4134",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 168,
+    "instituteCode": "16352",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 169,
+    "instituteCode": "16351",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 170,
+    "instituteCode": "4144",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 171,
+    "instituteCode": "3723",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 172,
+    "instituteCode": "5124",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 173,
+    "instituteCode": "5401",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 174,
+    "instituteCode": "1123",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 175,
+    "instituteCode": "5124",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 176,
+    "instituteCode": "5401",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 177,
+    "instituteCode": "5399",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 178,
+    "instituteCode": "16352",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 179,
+    "instituteCode": "4144",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 180,
+    "instituteCode": "16352",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 181,
+    "instituteCode": "5401",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 182,
+    "instituteCode": "4196",
+    "coursePattern": "Computer Science and Engineering (Cyber Security)"
+  },
+  {
+    "pdfOrder": 183,
+    "instituteCode": "4133",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 184,
+    "instituteCode": "6319",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 185,
+    "instituteCode": "4145",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 186,
+    "instituteCode": "4151",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 187,
+    "instituteCode": "1116",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 188,
+    "instituteCode": "4196",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 189,
+    "instituteCode": "4151",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 190,
+    "instituteCode": "5106",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 191,
+    "instituteCode": "5171",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 192,
+    "instituteCode": "16354",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 193,
+    "instituteCode": "5171",
+    "coursePattern": "Artificial Intelligence (AI) and Data Science"
+  },
+  {
+    "pdfOrder": 194,
+    "instituteCode": "5106",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 195,
+    "instituteCode": "4151",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 196,
+    "instituteCode": "1123",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 197,
+    "instituteCode": "5396",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 198,
+    "instituteCode": "4145",
+    "coursePattern": "Artificial Intelligence and Data Science"
+  },
+  {
+    "pdfOrder": 199,
+    "instituteCode": "1126",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 200,
+    "instituteCode": "5263",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 201,
+    "instituteCode": "16357",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 202,
+    "instituteCode": "4192",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 203,
+    "instituteCode": "4196",
+    "coursePattern": "Computer Science and Engineering (Data Science)"
+  },
+  {
+    "pdfOrder": 204,
+    "instituteCode": "4135",
+    "coursePattern": "Computer Science and Engineering"
+  },
+  {
+    "pdfOrder": 205,
+    "instituteCode": "5223",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 206,
+    "instituteCode": "16357",
+    "coursePattern": "Information Technology"
+  },
+  {
+    "pdfOrder": 207,
+    "instituteCode": "16354",
+    "coursePattern": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "pdfOrder": 208,
+    "instituteCode": "5168",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 209,
+    "instituteCode": "4192",
+    "coursePattern": "Computer Science and Engineering (AIML)"
+  },
+  {
+    "pdfOrder": 210,
+    "instituteCode": "4133",
+    "coursePattern": "Computer Engineering"
+  },
+  {
+    "pdfOrder": 211,
+    "instituteCode": "4135",
+    "coursePattern": "Information Technology"
+  }
+]

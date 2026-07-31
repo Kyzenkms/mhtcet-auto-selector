@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 320px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px;
+      margin: 0;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    h2 {
+      font-size: 16px;
+      margin-top: 0;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+    p {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.4;
+    }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .btn-secondary {
+      background: #0d9488;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #0f766e;
+    }
+    .btn-warning {
+      background: #d97706;
+      color: white;
+    }
+    .btn-warning:hover {
+      background: #b45309;
+    }
+    .info-box {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: #334155;
+      margin-top: 10px;
+      border-radius: 0 4px 4px 0;
+    }
+    .upload-zone {
+      border: 2px dashed #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 500;
+      padding: 15px;
+      margin-bottom: 12px;
+      background: #f1f5f9;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover {
+      border-color: #3b82f6;
+      background: #e0f2fe;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-outline {
+      background: transparent;
+      color: #3b82f6;
+      border: 1px solid #3b82f6;
+    }
+    .btn-outline:hover {
+      background: #eff6ff;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #cbd5e1;
+      margin-bottom: 15px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .log-box {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .upload-zone input[type="file"] {
+      display: none;
+    }
+    .upload-text {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 5px;
+    }
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .logo { width: 30px; height: 30px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2 style="margin:0;">MHT-CET Auto-Selector</h2>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabMain">Auto-Select</div>
+    <div class="tab" id="tabGuide">How to Use</div>
+  </div>
+
+  <div id="contentMain" class="tab-content active">
+    <div class="upload-zone" id="dropZone">
+      <strong>Upload Preferences</strong>
+      <div class="upload-text">Drag & Drop or Click to upload PDF/Excel/CSV/JSON</div>
+      <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv,.json,.pdf">
+    </div>
+
+    <p id="loadedCount" style="margin-top: 0;"><strong>0 choices loaded</strong>. Please upload a file.</p>
+    
+    <button class="btn btn-purple" id="autoSearchBtn" style="background: #7c3aed; color: white;">1. ⚡ Auto-Select (Step 1)</button>
+    <button class="btn btn-secondary" id="step2Btn">2. Set Preferences (Step 2)</button>
+    <button class="btn btn-outline" id="verifyBtn" style="margin-top: 10px;">🔍 Verify Page with PDF</button>
+
+    <div class="log-box" id="statusLog">
+      Waiting for action...
+    </div>
+  </div>
+
+  <div id="contentGuide" class="tab-content">
+    <div style="font-size: 12px; color: #334155; line-height: 1.4;">
+      <h3 style="margin-top:0; color:#1e3a8a; font-size: 13px;">Phase 1: Prepare Your List</h3>
+      <p>The parser is smart! Your list can have multiple columns (like Preference No. or College Name), but it <strong>MUST</strong> contain the Institute Code and Course Name in separate columns.</p>
+      <p><strong>💡 Top-to-Bottom Ranking:</strong> The extension automatically ranks your colleges based on their top-to-bottom order in the file!</p>
+      
+      <div style="background: #f0fdf4; padding: 6px; border-left: 3px solid #22c55e; margin-bottom: 8px;">
+        <strong>✅ DO (Extra Columns are Fine):</strong><br>
+        <code>1</code> | <code>1107</code> | <code>P.R Pote</code> | <code>Computer Engineering</code>
+      </div>
+      <div style="background: #fef2f2; padding: 6px; border-left: 3px solid #ef4444; margin-bottom: 15px;">
+        <strong>❌ DON'T (No mashed-up strings):</strong><br>
+        <code>1107 - P.R Pote Patil College (CE)</code>
+      </div>
+
+      <h3 style="color:#1e3a8a; font-size: 13px;">Phase 2: MHT-CET Portal Steps</h3>
+      
+      <strong>Step 1 Page (Select Options)</strong>
+      <ol style="padding-left: 18px; margin-bottom: 10px; margin-top:5px;">
+        <li><strong>Upload your list:</strong> Go to the Auto-Select tab and upload your file.</li>
+        <li><strong>Meet your Assistant:</strong> The moment your list loads, the <strong>Live Assistant Sidebar</strong> will automatically slide in on the right side of the MHT-CET website!</li>
+        <li><strong>Select a Course:</strong> Choose a branch from the website's dropdown. The Assistant will instantly calculate and tell you <em>exactly</em> how many of your colleges offer that branch.</li>
+        <li><strong>Auto-Select:</strong> Click the purple <strong>⚡ Auto-Select</strong> button inside the sidebar. It will find and check all the exact matches for you.</li>
+        <li><strong>Review:</strong> Watch the live Sidebar for 💡 <strong>Smart Advice</strong> warnings to catch any tricky branch names!</li>
+      </ol>
+
+      <strong>Step 2 Page (Set Preferences)</strong>
+      <ol style="padding-left: 18px; margin-bottom: 15px; margin-top:5px;">
+        <li>Once you save and move to the <em>Set Your Preferences</em> page, click the green <strong>Step 2 (Order)</strong> button in the sidebar.</li>
+        <li>The extension will automatically type the preference numbers (1, 2, 3...) into the correct boxes exactly following the top-to-bottom order of your uploaded file!</li>
+      </ol>
+
+      <div style="background: #fffbeb; padding: 8px; border: 1px solid #f59e0b; border-radius: 5px; text-align:center;">
+        <strong>⚠️ CRITICAL WARNING:</strong><br>
+        The extension acts as a guardian assistant, NOT a replacement for your own judgement! ALWAYS double-check your final preference list before submitting.
+      </div>
+    </div>
+  </div>
+
+  <script src="xlsx.full.min.js"></script>
+  <script src="pdf.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

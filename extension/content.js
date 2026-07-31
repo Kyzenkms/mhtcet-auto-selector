@@ -1,0 +1,711 @@
+// Helper to normalize branch names for STRICT exact branch matching (handles portal formatting quirks)
+function normalizeBranchName(text) {
+  if (!text) return "";
+  let norm = text.toLowerCase().trim();
+  norm = norm.replace(/&/g, "and");
+  // Ensure space before opening parenthesis: e.g. "engineering(data" -> "engineering (data"
+  norm = norm.replace(/([a-z0-9])\(/g, "$1 (");
+  
+  // Expand/Normalize common portal acronym variations inside parentheses
+  norm = norm.replace(/artificial intelligence and machine learning/g, "aiml");
+  norm = norm.replace(/artificial intelligence \(ai\) and data science/g, "artificial intelligence and data science");
+  norm = norm.replace(/ai and ml/g, "aiml");
+  norm = norm.replace(/ai & ml/g, "aiml");
+  
+  // Handle the tricky CSE (AI ML) versus AI ML discrepancy
+  // If it contains cse and aiml, we standardize it so it matches better in fuzzy logic
+  norm = norm.replace(/computer science and engineering/g, "cse");
+  
+  norm = norm.replace(/\s+/g, " ");
+  norm = norm.replace(/[^a-z0-9() ]/g, "");
+  return norm.trim();
+}
+
+// Normalize an institute code (strip leading zeros)
+function normCode(code) {
+  return String(code).trim().replace(/^0+/, '');
+}
+
+// Check if a row's text matches a target course pattern STRICTLY (no merging of branches)
+function matchesCoursePattern(rowText, targetPattern, instituteCode = "") {
+  const normRow = normalizeBranchName(rowText);
+  const normTarget = normalizeBranchName(targetPattern);
+  
+  if (!normRow || !normTarget) return false;
+  if (normRow === normTarget) return true;
+  if (normRow.includes(normTarget)) return true;
+  return false;
+}
+
+// Check if a row loosely matches (used for Smart Advice when exact match fails)
+function fuzzyMatchCourse(rowText, targetPattern) {
+  const normRow = normalizeBranchName(rowText);
+  const normTarget = normalizeBranchName(targetPattern);
+  if (!normRow || !normTarget) return false;
+  
+  // Basic heuristic: if both contain "ai" and "ml", or similar words
+  const getKeywords = (str) => {
+    let kw = str.replace(/[()]/g, ' ').split(' ').filter(w => w.length > 2 && w !== "and" && w !== "the" && w !== "engineering" && w !== "technology");
+    // add exact acronyms like aiml
+    if (str.includes("aiml") || (str.includes("ai") && str.includes("ml"))) kw.push("aiml");
+    if (str.includes("artificial intelligence") || str.includes("ai")) kw.push("ai");
+    if (str.includes("computer science") || str.includes("cse")) kw.push("cse");
+    if (str.includes("information technology") || str.includes("it")) kw.push("it");
+    return [...new Set(kw)];
+  };
+
+  const rowKW = getKeywords(normRow);
+  const targetKW = getKeywords(normTarget);
+
+  let matchCount = 0;
+  for (const kw of targetKW) {
+    if (rowKW.includes(kw)) matchCount++;
+  }
+  
+  // If we have at least one significant overlapping keyword that isn't generic
+  return matchCount > 0 && (rowKW.includes("ai") || rowKW.includes("cse") || rowKW.includes("it") || rowKW.includes("data"));
+}
+
+// Helper to sleep/delay to simulate human interaction
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function autoSelectStep1(preferredList) {
+  console.log("MHT-CET Auto-Selector: Step 1 Shortlisting...");
+  const tableRows = Array.from(document.querySelectorAll("table tbody tr"));
+  
+  // Guard check: ensure we are on a page with checkboxes (Step 1)
+  const hasCheckboxes = tableRows.some(row => row.querySelector("input[type='checkbox']"));
+  if (!hasCheckboxes) {
+    alert("⚠️ Could not find any checkboxes on this page!\n\nPlease make sure you are on the 'Shortlist Your Options' (Step 1) page and have clicked 'Search Institute' before running this.");
+    return;
+  }
+
+  let count = 0;
+
+  for (const row of tableRows) {
+    const text = row.innerText;
+    const checkbox = row.querySelector("input[type='checkbox']");
+    if (!checkbox) continue;
+
+    let shouldSelect = false;
+
+    for (const item of preferredList) {
+      const code = item.instituteCode;
+      if (text.includes(code) || text.includes(code.padStart(5, '0'))) {
+        if (matchesCoursePattern(text, item.coursePattern, code)) {
+          shouldSelect = true;
+          break;
+        }
+      }
+    }
+
+    if (shouldSelect && !checkbox.checked) {
+      checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      checkedCount++;
+      await sleep(50 + Math.random() * 70);
+    }
+  }
+
+  alert(`MHT-CET Auto-Selector:\nChecked ${checkedCount} NEW matching branches from your PDF list!`);
+  updateSidebarCounter();
+}
+
+async function autoOrderStep2(preferredList) {
+  console.log("MHT-CET Auto-Selector: Step 2 Preference Ordering...");
+  const rows = Array.from(document.querySelectorAll("table tbody tr"));
+
+  // Guard check: ensure we are on a page with number/text inputs (Step 2)
+  const hasNumberInputs = rows.some(row => row.querySelector("input[type='text'], input[type='number']"));
+  if (!hasNumberInputs) {
+    alert("⚠️ Could not find preference number inputs on this page!\n\nPlease make sure you are on the 'Set Your Preferences' (Step 2) page before running this.");
+    return;
+  }
+
+  // The final ranked list is exactly what the user provided in the PDF
+  const orderedTargets = preferredList.map(item => ({
+    code: normCode(item.instituteCode),
+    pattern: item.coursePattern,
+    isDream: false
+  }));
+
+  let rowItems = rows.map(row => {
+    const text = row.innerText;
+    const checkbox = row.querySelector("input[type='checkbox']");
+    const numInput = row.querySelector("input[type='text'], input[type='number']");
+    return { row, text, checkbox, numInput, alreadyRanked: false };
+  });
+
+  let assignedRank = 1;
+  let matchesCount = 0;
+
+  for (const target of orderedTargets) {
+    const match = rowItems.find(item => {
+      if (item.alreadyRanked) return false;
+      const codeMatch = item.text.includes(target.code) || item.text.includes(target.code.replace(/^0+/, ""));
+      if (target.isDream && codeMatch) return true;
+      return codeMatch && matchesCoursePattern(item.text, target.pattern, target.code);
+    });
+
+    if (match) {
+      match.alreadyRanked = true;
+      matchesCount++;
+      
+      if (match.checkbox && !match.checkbox.checked) {
+        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      } else if (match.numInput) {
+        match.numInput.value = assignedRank;
+        match.numInput.dispatchEvent(new Event('input', { bubbles: true }));
+        match.numInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      assignedRank++;
+      await sleep(60 + Math.random() * 80);
+    }
+  }
+
+  alert(`MHT-CET Auto-Selector: Successfully set preference order for ${matchesCount} colleges!`);
+}
+
+function verifyPreferences(preferredList) {
+  console.log("MHT-CET Auto-Selector: Verifying current preferences against PDF database...");
+
+  const rows = Array.from(document.querySelectorAll("table tbody tr"));
+
+  let targetList = preferredList.map(item => ({
+    pdfOrder: item.pdfOrder,
+    instituteCode: item.instituteCode,
+    coursePattern: item.coursePattern
+  }));
+
+  let pageItems = [];
+  rows.forEach((row, index) => {
+    const text = row.innerText.trim();
+    if (!text || text.length < 5) return;
+
+    const cells = Array.from(row.querySelectorAll("td"));
+    let code = "N/A";
+    if (cells[1]) {
+      const cMatch = cells[1].innerText.trim().match(/\d{4,5}/);
+      if (cMatch) code = cMatch[0];
+    }
+    if (code === "N/A") {
+      const cMatch = text.match(/\b\d{4,5}\b/);
+      if (cMatch) code = cMatch[0];
+    }
+
+    const numInput = row.querySelector("input[type='text'], input[type='number']");
+    const checkbox = row.querySelector("input[type='checkbox']");
+    const isChecked = checkbox ? checkbox.checked : false;
+    const prefRank = numInput ? numInput.value : (isChecked ? "Selected" : "Not Selected");
+
+    pageItems.push({
+      index: index + 1,
+      code: normCode(code),
+      fullText: text,
+      prefRank,
+      isChecked,
+      rowEl: row,
+      checkboxEl: checkbox,
+      matched: false
+    });
+  });
+
+  let matched = [];
+  let missing = [];
+
+  targetList.forEach(target => {
+    const match = pageItems.find(item => {
+      const codeMatch = item.code === normCode(target.instituteCode) || 
+                        item.fullText.includes(target.instituteCode) ||
+                        item.fullText.includes(normCode(target.instituteCode));
+      // Dream colleges match regardless of branch!
+      if (codeMatch && isDreamCollegeCode(target.instituteCode)) return true;
+      return codeMatch && matchesCoursePattern(item.fullText, target.coursePattern, target.instituteCode);
+    });
+
+    if (match) {
+      match.matched = true;
+      matched.push({ target, matchedPageItem: match });
+    } else {
+      missing.push(target);
+      
+      // Smart Advice: Check for a near match for this missing target
+      const nearMatch = pageItems.find(item => {
+        return (item.code === normCode(target.instituteCode) || item.fullText.includes(target.instituteCode)) 
+               && fuzzyMatchCourse(item.fullText, target.coursePattern);
+      });
+      
+      if (nearMatch && nearMatch.rowEl) {
+        // Only inject if not already injected
+        if (!nearMatch.rowEl.previousElementSibling || !nearMatch.rowEl.previousElementSibling.classList.contains("smart-advice-row")) {
+          const colSpan = nearMatch.rowEl.children.length;
+          const adviceHtml = `
+            <tr class="smart-advice-row" style="background: #eff6ff;">
+              <td colspan="${colSpan}" style="padding: 10px; border-left: 4px solid #3b82f6;">
+                <div style="color: #1e3a8a; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">💡</span>
+                  <div>
+                    <strong>Smart Advice:</strong> You requested <strong>${target.instituteCode} - ${target.coursePattern}</strong>, 
+                    but we found a slightly different branch name here. 
+                    If you want this branch, select it manually or adjust your filter.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+          nearMatch.rowEl.insertAdjacentHTML("beforebegin", adviceHtml);
+        }
+      }
+    }
+  });
+
+  // Filter extra options (excluding dream colleges and matched PDF items)
+  const extra = pageItems.filter(item => !item.matched && item.code !== "N/A" && !isDreamCollegeCode(item.code));
+
+  alert(`MHT-CET Verification Summary:\n\n✅ Matched: ${matched.length}\n⚠️ Missing from Page: ${missing.length}\n⚡ Extra on Page: ${extra.length}\n\nClick OK to open detailed report view.`);
+
+  let existingModal = document.getElementById("cet-verifier-modal");
+  if (existingModal) existingModal.remove();
+
+  const modalHtml = `
+    <div id="cet-verifier-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); z-index: 2147483647; display: flex; align-items: center; justify-content: center; font-family: sans-serif;">
+      <div style="background: #ffffff; width: 90%; max-width: 850px; max-height: 85vh; border-radius: 12px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; overflow: hidden; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px;">
+          <h2 style="margin: 0; color: #1e293b; font-size: 18px;">📊 PDF vs Web Page Verification</h2>
+          <button id="close-modal-btn" style="background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">✕ Close</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 16px 0;">
+          <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold;">${matched.length}</div>
+            <div style="font-size: 12px;">Matching Options</div>
+          </div>
+          <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold;">${missing.length}</div>
+            <div style="font-size: 12px;">Missing from Web Page</div>
+          </div>
+          <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold;">${extra.length}</div>
+            <div style="font-size: 12px;">Extra on Web Page</div>
+          </div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; padding-right: 8px;">
+          <h3 style="color: #991b1b; font-size: 14px; margin-top: 10px;">⚠️ Missing from Page (${missing.length})</h3>
+          ${missing.length === 0 ? '<p style="font-size:12px; color: #166534;">All PDF colleges are present!</p>' : `
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px;">
+              <thead><tr style="background: #f8fafc; text-align: left;"><th style="padding: 6px;">PDF #</th><th style="padding: 6px;">Code</th><th style="padding: 6px;">Course Pattern</th></tr></thead>
+              <tbody>
+                ${missing.map(m => `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:6px;">${m.pdfOrder || 'N/A'}</td><td style="padding:6px; font-weight:bold;">${m.instituteCode}</td><td style="padding:6px;">${m.coursePattern}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          `}
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <h3 style="color: #92400e; font-size: 14px; margin: 0;">⚡ Extra / Unmatched on Page (${extra.length})</h3>
+            ${extra.length > 0 ? `<button id="clear-extra-btn" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">🧹 Uncheck & Highlight Extra (${extra.length})</button>` : ''}
+          </div>
+          ${extra.length === 0 ? '<p style="font-size:12px; color: #166534;">No extra choices selected!</p>' : `
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;">
+              <thead><tr style="background: #f8fafc; text-align: left;"><th style="padding: 6px;">Code</th><th style="padding: 6px;">Status / Preference Rank</th><th style="padding: 6px;">Snippet</th></tr></thead>
+              <tbody>
+                ${extra.map(e => `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:6px; font-weight:bold;">${e.code}</td><td style="padding:6px;">${e.prefRank}</td><td style="padding:6px; color:#64748b;">${e.fullText.substring(0, 60)}...</td></tr>`).join('')}
+              </tbody>
+            </table>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  
+  document.getElementById("close-modal-btn").onclick = function() {
+    document.getElementById("cet-verifier-modal").remove();
+  };
+
+  const clearBtn = document.getElementById("clear-extra-btn");
+  if (clearBtn) {
+    clearBtn.onclick = async function() {
+      let uncheckCount = 0;
+      for (const item of extra) {
+        if (item.rowEl) {
+          item.rowEl.style.backgroundColor = "#fee2e2"; // Highlight red
+        }
+        if (item.checkboxEl && item.checkboxEl.checked) {
+          item.checkboxEl.click();
+          uncheckCount++;
+          await sleep(40);
+        }
+      }
+      alert(`🧹 Action Completed!\n\n- Unchecked ${uncheckCount} extra option checkboxes.\n- Highlighted all ${extra.length} extra rows in RED on the page so you can easily review or remove them.`);
+      document.getElementById("cet-verifier-modal").remove();
+    };
+  }
+}
+
+// Feature: Auto-Select ONLY in Top Search Results Table (above ADD Selected Options)
+async function autoSearchAndAddMissing(preferredList) {
+  console.log("MHT-CET Auto-Selector: Auto-selecting matches in top search table...");
+
+  // --- Step 1: Get the selected course from the page dropdown ---
+  // Try multiple strategies to find the Course dropdown
+  const allSelects = Array.from(document.querySelectorAll("select"));
+  
+  // Strategy 1: find by id/name containing "course"
+  let courseSelect = allSelects.find(s => (s.id + " " + s.name).toLowerCase().includes("course"));
+  
+  // Strategy 2: find by option text — which select has options like "Computer Engineering"?
+  if (!courseSelect) {
+    courseSelect = allSelects.find(s => 
+      Array.from(s.options).some(o => o.text.toLowerCase().includes("engineering") || o.text.toLowerCase().includes("technology"))
+    );
+  }
+
+  // Strategy 3: fallback to first select with selectedIndex > 0
+  if (!courseSelect) {
+    courseSelect = allSelects.find(s => s.selectedIndex > 0);
+  }
+
+  const selectedCourse = courseSelect && courseSelect.selectedIndex > 0
+    ? courseSelect.options[courseSelect.selectedIndex].text.trim()
+    : "";
+
+  if (!selectedCourse) {
+    alert("⚠️ Could not detect selected course!\n\nPlease:\n1. Select a Course from the dropdown on the page\n2. Click 'Search Institute'\n3. Then click this button again.");
+    return;
+  }
+
+  const normSelected = normalizeBranchName(selectedCourse);
+
+  // --- Step 2: Pre-filter PDF list to ONLY entries matching the selected course strictly ---
+  const relevantItems = preferredList.filter(item => {
+    const normItem = normalizeBranchName(item.coursePattern);
+    return normItem === normSelected || normItem.includes(normSelected) || normSelected.includes(normItem);
+  });
+
+  // Show confirmation with what was detected — user can cancel if wrong
+  const proceedMsg = `🔍 Extension detected:\n\nCourse Filter: "${selectedCourse}"\nMatching PDF entries: ${relevantItems.length}\nInstitute codes: ${relevantItems.map(i => i.instituteCode).join(', ') || 'none'}\n\nProceed to select these in the table?`;
+  if (!window.confirm(proceedMsg)) return;
+
+  if (relevantItems.length === 0) {
+    // Smart Advice check: are there ANY colleges in the preferred list that match the currently visible rows, even fuzzily?
+    // We'll just alert them with a hint.
+    alert(`No exact entries found in your uploaded list for:\n"${selectedCourse}"\n\n💡 Smart Advice: If you know a college has this branch, check if your uploaded list uses a different name (e.g. "CSE (AI ML)" vs "AI ML").`);
+    return;
+  }
+
+  // Build a Set of normalized codes for O(1) lookup
+  const pdfCodeSet = new Set(relevantItems.map(item => normCode(item.instituteCode)));
+
+  // --- Step 3: Find the TOP search results table (first table with checkboxes) ---
+  const allTables = Array.from(document.querySelectorAll("table"));
+  
+  // Find element with "Select Options of Your Choice" heading to split above/below
+  const pageText = document.body.innerText;
+  const headingEl = Array.from(document.querySelectorAll("*")).find(el =>
+    el.children.length === 0 && el.innerText && el.innerText.includes("Select Options of Your Choice")
+  );
+
+  // Pick the first table that comes BEFORE the shortlist section (or just first table)
+  let topSearchTable = null;
+  for (const tbl of allTables) {
+    const hasCheckboxes = tbl.querySelector("tbody input[type='checkbox']");
+    if (!hasCheckboxes) continue;
+    if (headingEl) {
+      // Check if table appears before the heading in DOM
+      const position = headingEl.compareDocumentPosition(tbl);
+      // DOCUMENT_POSITION_PRECEDING = 2
+      if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+        topSearchTable = tbl;
+        break;
+      }
+    } else {
+      topSearchTable = tbl;
+      break;
+    }
+  }
+
+  if (!topSearchTable) topSearchTable = allTables.find(t => t.querySelector("tbody input[type='checkbox']")) || allTables[0];
+
+  const checkboxes = topSearchTable ? Array.from(topSearchTable.querySelectorAll("tbody input[type='checkbox']")) : [];
+  
+  if (checkboxes.length === 0) {
+    alert("No search results found! Please click 'Search Institute' first.");
+    return;
+  }
+
+  // Find institute code column index from header
+  const headerRow = topSearchTable.querySelector("thead tr") || topSearchTable.querySelector("tbody tr:first-child");
+  let codeColIndex = 1; // default: second column
+  if (headerRow) {
+    const hdrs = Array.from(headerRow.querySelectorAll("th, td"));
+    const idx = hdrs.findIndex(h => {
+      const t = h.innerText.toLowerCase();
+      return t.includes("institute code") || t.includes("code");
+    });
+    if (idx >= 0) codeColIndex = idx;
+  }
+  console.log("Code column index:", codeColIndex);
+
+  // --- Step 4: Loop rows, extract code, check against pdfCodeSet ---
+  let checkedCount = 0;
+  let skippedAlready = 0;
+  
+  // For Smart Advice during auto-search
+  const fullPdfCodeSet = new Set(preferredList.map(item => normCode(item.instituteCode)));
+
+  for (const cb of checkboxes) {
+    const row = cb.closest("tr");
+    if (!row) continue;
+    if (cb.checked) { skippedAlready++; continue; }
+
+    const cells = Array.from(row.querySelectorAll("td"));
+    const rawCode = cells[codeColIndex] ? cells[codeColIndex].innerText.trim() : "";
+    const rowCode = normCode(rawCode);
+
+    if (!rowCode) continue;
+
+    const isMatch = pdfCodeSet.has(rowCode);
+
+    if (isMatch) {
+      cb.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      row.style.backgroundColor = "#dcfce7";
+      checkedCount++;
+      await sleep(50 + Math.random() * 60);
+    } else if (fullPdfCodeSet.has(rowCode)) {
+      // Smart Advice: The institute code is in their list, but wasn't selected because the branch didn't perfectly match.
+      // Make sure we only flag visible rows (important for the mock portal)
+      if (row.style.display === "none") continue;
+
+      const targetItems = preferredList.filter(item => normCode(item.instituteCode) === rowCode);
+      let isNearMatch = false;
+      let targetPattern = "";
+      
+      const rowText = row.innerText;
+      for (const t of targetItems) {
+        if (fuzzyMatchCourse(rowText, t.coursePattern)) {
+           isNearMatch = true;
+           targetPattern = t.coursePattern;
+           break;
+        }
+      }
+      
+      if (isNearMatch) {
+        if (!row.previousElementSibling || !row.previousElementSibling.classList.contains("smart-advice-row")) {
+          const colSpan = row.children.length;
+          const adviceHtml = `
+            <tr class="smart-advice-row" style="background: #eff6ff;">
+              <td colspan="${colSpan}" style="padding: 10px; border-left: 4px solid #3b82f6;">
+                <div style="color: #1e3a8a; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">💡</span>
+                  <div>
+                    <strong>Smart Advice:</strong> Your uploaded list requests <strong>${targetPattern}</strong> for ${rowCode}. 
+                    This row has a slightly different branch name. Check the box manually if you meant this branch.
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+          row.insertAdjacentHTML("beforebegin", adviceHtml);
+        }
+      }
+    }
+  }
+
+  if (checkedCount > 0) {
+    alert(`✅ Selected ${checkedCount} matching colleges for "${selectedCourse}"!\n(${skippedAlready} were already checked)\n\nNow click 'ADD Selected Options' on the page.`);
+  } else {
+    alert(`No new matches found for "${selectedCourse}".\n(${skippedAlready} already checked, ${relevantItems.length} in uploaded list)\n\nTry a different course or verify institute codes.`);
+  }
+}
+
+// Inject Live Sidebar UI
+function injectSidebar() {
+  if (document.getElementById("mhtcet-live-sidebar")) return;
+
+  const totalColleges = window.currentPreferredList ? window.currentPreferredList.length : 0;
+
+  const sidebarHTML = `
+    <div id="mhtcet-live-sidebar" style="position: fixed; right: 0; top: 15%; width: 320px; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.1); border-left: 3px solid #2563eb; border-radius: 8px 0 0 8px; z-index: 999999; font-family: 'Segoe UI', Tahoma, sans-serif; transition: transform 0.3s; transform: translateX(0);">
+      <div id="mhtcet-sidebar-toggle" style="position: absolute; left: -30px; top: 10px; width: 30px; height: 30px; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px 0 0 4px; font-weight: bold; font-size: 16px;">
+        ❯
+      </div>
+      <div style="padding: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 10px;">
+          <h3 style="margin: 0; color: #1e3a8a; font-size: 16px;">Live Assistant</h3>
+          <span id="mhtcet-sidebar-counter" style="background: #e2e8f0; color: #1e293b; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">Selected: 0 / ${totalColleges}</span>
+        </div>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <button id="mhtcet-sidebar-auto" style="flex: 1; padding: 6px; background: #7c3aed; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">⚡ Auto-Select</button>
+          <button id="mhtcet-sidebar-step2" style="flex: 1; padding: 6px; background: #0d9488; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Step 2 (Order)</button>
+          <button id="mhtcet-sidebar-verify" style="flex: 1; padding: 6px; background: white; color: #3b82f6; border: 1px solid #3b82f6; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">🔍 Verify</button>
+        </div>
+
+        <div id="mhtcet-sidebar-logs" style="max-height: 350px; overflow-y: auto; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="padding: 8px; background: #f8fafc; border-radius: 4px; color: #475569; font-style: italic;">
+            Ready and watching your selections...
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', sidebarHTML);
+
+  let isCollapsed = false;
+  document.getElementById("mhtcet-sidebar-toggle").addEventListener("click", (e) => {
+    isCollapsed = !isCollapsed;
+    document.getElementById("mhtcet-live-sidebar").style.transform = isCollapsed ? "translateX(100%)" : "translateX(0)";
+    e.target.innerText = isCollapsed ? "❮" : "❯";
+  });
+
+  // Attach button listeners
+  document.getElementById("mhtcet-sidebar-auto").addEventListener("click", () => {
+    if (window.currentPreferredList) autoSearchAndAddMissing(window.currentPreferredList);
+  });
+  document.getElementById("mhtcet-sidebar-step2").addEventListener("click", () => {
+    if (window.currentPreferredList) autoOrderStep2(window.currentPreferredList);
+  });
+  document.getElementById("mhtcet-sidebar-verify").addEventListener("click", () => {
+    if (window.currentPreferredList) verifyPreferences(window.currentPreferredList);
+  });
+}
+
+function updateSidebarCounter() {
+  const counterEl = document.getElementById("mhtcet-sidebar-counter");
+  if (!counterEl || !window.currentPreferredList) return;
+  
+  // Count visible checked checkboxes in the table
+  const checkedBoxes = document.querySelectorAll("table tbody input[type='checkbox']:checked");
+  const total = window.currentPreferredList.length;
+  
+  counterEl.innerText = `Selected: ${checkedBoxes.length} / ${total}`;
+}
+
+function addSidebarLog(message, type = "info") {
+  const logContainer = document.getElementById("mhtcet-sidebar-logs");
+  if (!logContainer) return;
+  
+  const colors = {
+    info: { bg: "#eff6ff", border: "#3b82f6", color: "#1d4ed8" },
+    success: { bg: "#f0fdf4", border: "#22c55e", color: "#166534" },
+    warning: { bg: "#fef2f2", border: "#ef4444", color: "#b91c1c" }
+  };
+  const theme = colors[type] || colors.info;
+  
+  const logDiv = document.createElement("div");
+  logDiv.style.cssText = `padding: 8px; background: ${theme.bg}; border-left: 3px solid ${theme.border}; border-radius: 4px; color: ${theme.color}; animation: fadeIn 0.3s;`;
+  logDiv.innerHTML = message;
+  
+  logContainer.prepend(logDiv);
+}
+
+// Track manual checkbox clicks
+function setupLiveTracking(preferredList) {
+  if (window.hasLiveTracking) {
+    // Update the list reference but don't attach another listener
+    window.currentPreferredList = preferredList;
+    return;
+  }
+  
+  window.hasLiveTracking = true;
+  window.currentPreferredList = preferredList;
+
+  document.addEventListener("change", (e) => {
+    // 1. Handle Checkbox selections
+    if (e.target.tagName.toLowerCase() === "input" && e.target.type === "checkbox") {
+      const isChecked = e.target.checked;
+      const row = e.target.closest("tr");
+      if (!row) return;
+
+      // Extract details
+      const cells = Array.from(row.querySelectorAll("td"));
+      if (cells.length < 4) return; // not a valid table row
+
+      // Find code column dynamically (assume 1 if not found)
+      let codeColIndex = 1;
+      const headerRow = row.closest("table").querySelector("thead tr");
+      if (headerRow) {
+        const hdrs = Array.from(headerRow.querySelectorAll("th, td"));
+        const idx = hdrs.findIndex(h => {
+          const t = h.innerText.toLowerCase();
+          return t.includes("institute code") || t.includes("code");
+        });
+        if (idx >= 0) codeColIndex = idx;
+      }
+
+      const rawCode = cells[codeColIndex].innerText.trim();
+      const code = normCode(rawCode);
+      const courseName = cells[codeColIndex+1] ? cells[codeColIndex+1].innerText.trim() : "";
+
+      if (isChecked) {
+        // Did they select something on their list?
+        const match = window.currentPreferredList.find(item => normCode(item.instituteCode) === code && matchesCoursePattern(courseName, item.coursePattern, code));
+        
+        if (match) {
+          addSidebarLog(`<strong>✅ Safe:</strong> You selected ${rawCode} (${courseName}).`, "success");
+        } else {
+          // Check if it's a branch mismatch using strict OR fuzzy matching
+          const isCodeInList = window.currentPreferredList.find(item => normCode(item.instituteCode) === code);
+          if (isCodeInList) {
+            // Is it a fuzzy match (like AI ML vs CSE AI ML)?
+            const fuzzyMatch = fuzzyMatchCourse(courseName, isCodeInList.coursePattern);
+            if (fuzzyMatch) {
+               addSidebarLog(`<strong>💡 Smart Advice:</strong> You selected ${rawCode} (${courseName}). Your list asked for "${isCodeInList.coursePattern}". This looks like a near-match branch. Please verify!`, "warning");
+            } else {
+               addSidebarLog(`<strong>⚠️ Warning:</strong> You selected ${rawCode}, but the branch (<em>${courseName}</em>) does NOT match your PDF list at all!`, "warning");
+            }
+          } else {
+            addSidebarLog(`<strong>⚠️ Warning:</strong> You selected ${rawCode}, but this institute is NOT on your uploaded list at all!`, "warning");
+          }
+        }
+      } else {
+        addSidebarLog(`<em>Unselected ${rawCode}.</em>`, "info");
+      }
+      
+      // Update counter instantly when checkbox changes
+      updateSidebarCounter();
+    }
+    
+    // 2. Handle Dropdown selections (Proactive Assistant)
+    if (e.target.tagName.toLowerCase() === "select" && e.target.id === "courseSelect") {
+        if(e.target.selectedIndex > 0) {
+            const selectedBranch = e.target.options[e.target.selectedIndex].text;
+            const normSelected = normalizeBranchName(selectedBranch);
+            
+            // Count how many colleges from the user's list offer this specific branch
+            const matches = window.currentPreferredList.filter(item => {
+                const normItem = normalizeBranchName(item.coursePattern);
+                return normItem === normSelected || normItem.includes(normSelected) || normSelected.includes(normItem);
+            });
+            
+            if (matches.length > 0) {
+                addSidebarLog(`<strong>🔎 You selected:</strong> ${selectedBranch}.<br>I found <strong>${matches.length} colleges</strong> in your list for this branch!<br><em>Click '⚡ Auto-Select Matches in Table' now, and watch out for Smart Advice!</em>`, "info");
+            } else {
+                addSidebarLog(`<strong>🔎 You selected:</strong> ${selectedBranch}.<br>You have <strong>0 colleges</strong> in your list for this branch.`, "warning");
+            }
+        }
+    }
+  });
+}
+
+// Listener for messages from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "AUTO_SELECT_STEP1") {
+    autoSelectStep1(request.preferredList);
+    sendResponse({status: "Started Step 1"});
+  } else if (request.action === "AUTO_SEARCH_MISSING") {
+    autoSearchAndAddMissing(request.preferredList);
+    sendResponse({status: "Started Auto Search"});
+  } else if (request.action === "AUTO_ORDER_STEP2") {
+    autoOrderStep2(request.preferredList);
+    sendResponse({status: "Started Step 2"});
+  } else if (request.action === "VERIFY_PREFERENCES") {
+    verifyPreferences(request.preferredList);
+    sendResponse({status: "Verification Started"});
+  }
+  
+  // Inject sidebar and setup tracking on first message
+  injectSidebar();
+  setupLiveTracking(request.preferredList);
+});
+
+// Helper to normalize branch names for STRICT exact branch matching (handles portal formatting quirks)
