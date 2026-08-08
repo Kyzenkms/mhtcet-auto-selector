@@ -544,6 +544,46 @@ function injectSidebar() {
   });
 }
 
+function getCourseNameForRow(row) {
+  if (row) {
+    const table = row.closest("table");
+    if (table) {
+      const headerRow = table.querySelector("thead tr") || table.querySelector("tbody tr:first-child");
+      if (headerRow) {
+        const hdrs = Array.from(headerRow.querySelectorAll("th, td"));
+        const courseColIdx = hdrs.findIndex(h => {
+          const t = h.innerText.toLowerCase();
+          return t.includes("course") || t.includes("branch");
+        });
+        if (courseColIdx >= 0) {
+          const cells = Array.from(row.querySelectorAll("td"));
+          if (cells[courseColIdx]) {
+            return cells[courseColIdx].innerText.trim();
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback for Step 1 Search Table: get selected course from the page's dropdown filter
+  const allSelects = Array.from(document.querySelectorAll("select"));
+  let courseSelect = allSelects.find(s => (s.id + " " + s.name).toLowerCase().includes("course"));
+  if (!courseSelect) {
+    courseSelect = allSelects.find(s => 
+      Array.from(s.options).some(o => o.text.toLowerCase().includes("engineering") || o.text.toLowerCase().includes("technology"))
+    );
+  }
+  if (!courseSelect) {
+    courseSelect = allSelects.find(s => s.selectedIndex > 0);
+  }
+  
+  if (courseSelect && courseSelect.selectedIndex > 0) {
+    return courseSelect.options[courseSelect.selectedIndex].text.trim();
+  }
+
+  return "";
+}
+
 function updateSidebarCounter() {
   const counterEl = document.getElementById("mhtcet-sidebar-counter");
   if (!counterEl || !window.currentPreferredList) return;
@@ -551,7 +591,18 @@ function updateSidebarCounter() {
   const checkedBoxes = document.querySelectorAll("table tbody input[type='checkbox']:checked");
   const total = window.currentPreferredList.length;
   
-  counterEl.innerText = `Selected: ${checkedBoxes.length} / ${total}`;
+  const checkedCodes = new Set();
+  checkedBoxes.forEach(cb => {
+    const row = cb.closest("tr");
+    if (!row) return;
+    const cells = Array.from(row.querySelectorAll("td"));
+    if (cells[1]) {
+      const code = normCode(cells[1].innerText.trim());
+      if (code && code.match(/^\d+$/)) checkedCodes.add(code);
+    }
+  });
+
+  counterEl.innerText = `Colleges: ${checkedCodes.size} / ${total} (${checkedBoxes.length} options)`;
 }
 
 function addSidebarLog(message, type = "info") {
@@ -575,7 +626,6 @@ function addSidebarLog(message, type = "info") {
 // Track manual checkbox clicks
 function setupLiveTracking(preferredList) {
   if (window.hasLiveTracking) {
-    // BUG FIX: Update the list reference even when tracking is already set up
     window.currentPreferredList = preferredList;
     updateSidebarCounter();
     return;
@@ -592,7 +642,6 @@ function setupLiveTracking(preferredList) {
       if (!row) return;
 
       const cells = Array.from(row.querySelectorAll("td"));
-      // BUG FIX: was crashing when cells had < 4 columns (e.g. Smart Advice rows)
       if (cells.length < 2) return;
 
       let codeColIndex = 1;
@@ -612,28 +661,29 @@ function setupLiveTracking(preferredList) {
       if (!cells[codeColIndex]) return;
       const rawCode = cells[codeColIndex].innerText.trim();
       const code = normCode(rawCode);
-      const courseName = cells[codeColIndex + 1] ? cells[codeColIndex + 1].innerText.trim() : "";
+      const collegeName = cells[codeColIndex + 1] ? cells[codeColIndex + 1].innerText.trim() : "";
+      const courseName = getCourseNameForRow(row);
 
       if (isChecked) {
         const match = window.currentPreferredList.find(item => normCode(item.instituteCode) === code && matchesCoursePattern(courseName, item.coursePattern, code));
         
         if (match) {
-          addSidebarLog(`<strong>✅ Safe:</strong> You selected ${rawCode} (${courseName}).`, "success");
+          addSidebarLog(`<strong>✅ Safe:</strong> Selected ${rawCode} (${collegeName}).`, "success");
         } else {
           const isCodeInList = window.currentPreferredList.find(item => normCode(item.instituteCode) === code);
           if (isCodeInList) {
             const fuzzyMatch = fuzzyMatchCourse(courseName, isCodeInList.coursePattern);
             if (fuzzyMatch) {
-               addSidebarLog(`<strong>💡 Smart Advice:</strong> You selected ${rawCode} (${courseName}). Your list asked for "${isCodeInList.coursePattern}". This looks like a near-match branch. Please verify!`, "warning");
+               addSidebarLog(`<strong>💡 Smart Advice:</strong> Selected ${rawCode} (${collegeName}). Your list asked for "${isCodeInList.coursePattern}".`, "warning");
             } else {
-               addSidebarLog(`<strong>⚠️ Warning:</strong> You selected ${rawCode}, but the branch (<em>${courseName}</em>) does NOT match your PDF list at all!`, "warning");
+               addSidebarLog(`<strong>⚠️ Warning:</strong> Selected ${rawCode} (${collegeName}), but your PDF list asked for <em>${isCodeInList.coursePattern}</em> instead of <em>${courseName}</em>!`, "warning");
             }
           } else {
-            addSidebarLog(`<strong>⚠️ Warning:</strong> You selected ${rawCode}, but this institute is NOT on your uploaded list at all!`, "warning");
+            addSidebarLog(`<strong>⚠️ Warning:</strong> Selected ${rawCode} (${collegeName}), but this institute is NOT on your uploaded list at all!`, "warning");
           }
         }
       } else {
-        addSidebarLog(`<em>Unselected ${rawCode}.</em>`, "info");
+        addSidebarLog(`<em>Unselected ${rawCode} (${collegeName}).</em>`, "info");
       }
       
       updateSidebarCounter();
