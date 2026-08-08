@@ -2,21 +2,28 @@
 function normalizeBranchName(text) {
   if (!text) return "";
   let norm = text.toLowerCase().trim();
+  
   norm = norm.replace(/&/g, "and");
-  // Ensure space before opening parenthesis: e.g. "engineering(data" -> "engineering (data"
-  norm = norm.replace(/([a-z0-9])\(/g, "$1 (");
   
-  // Expand/Normalize common portal acronym variations inside parentheses
+  // Strip out parenthetical variations
+  norm = norm.replace(/\(ai\)/g, "ai");
+  norm = norm.replace(/\(ai and ml\)/g, "aiml");
+  norm = norm.replace(/\(ai and data science\)/g, "aids");
+  norm = norm.replace(/\(data science\)/g, "data science");
+  
+  // Standardize common branch acronyms so PDF and Web portal match 100%
   norm = norm.replace(/artificial intelligence and machine learning/g, "aiml");
-  norm = norm.replace(/artificial intelligence \(ai\) and data science/g, "artificial intelligence and data science");
+  norm = norm.replace(/artificial intelligence ai and machine learning/g, "aiml");
+  norm = norm.replace(/artificial intelligence and data science/g, "aids");
+  norm = norm.replace(/artificial intelligence ai and data science/g, "aids");
   norm = norm.replace(/ai and ml/g, "aiml");
-  norm = norm.replace(/ai & ml/g, "aiml");
+  norm = norm.replace(/ai and data science/g, "aids");
   
-  // Handle the tricky CSE (AI ML) versus AI ML discrepancy
   norm = norm.replace(/computer science and engineering/g, "cse");
+  norm = norm.replace(/computer science engineering/g, "cse");
   
+  norm = norm.replace(/[^a-z0-9 ]/g, " ");
   norm = norm.replace(/\s+/g, " ");
-  norm = norm.replace(/[^a-z0-9() ]/g, "");
   return norm.trim();
 }
 
@@ -32,7 +39,7 @@ function matchesCoursePattern(rowText, targetPattern, instituteCode = "") {
   
   if (!normRow || !normTarget) return false;
   if (normRow === normTarget) return true;
-  if (normRow.includes(normTarget)) return true;
+  if (normRow.includes(normTarget) || normTarget.includes(normRow)) return true;
   return false;
 }
 
@@ -76,7 +83,6 @@ async function autoSelectStep1(preferredList) {
     return;
   }
 
-  // BUG FIX: checkedCount was referenced before declaration
   let checkedCount = 0;
 
   for (const row of tableRows) {
@@ -111,7 +117,7 @@ async function autoOrderStep2(preferredList) {
   console.log("MHT-CET Auto-Selector: Step 2 Preference Ordering...");
   const rows = Array.from(document.querySelectorAll("table tbody tr"));
 
-  // Guard check: ensure we are on a page with checkboxes or inputs (Step 2)
+  // Guard check: ensure we are on a page with number/text inputs or checkboxes (Step 2)
   const hasInputs = rows.some(row => row.querySelector("input[type='checkbox'], input[type='text'], input[type='number']"));
   if (!hasInputs) {
     alert("⚠️ Could not find preference options on this page!\n\nPlease make sure you are on the 'Set Your Preferences' (Step 2) page before running this.");
@@ -146,13 +152,12 @@ async function autoOrderStep2(preferredList) {
       match.alreadyRanked = true;
       matchesCount++;
       
-      // CET Portal Step 2 uses checkboxes: clicking them sets the sequential Preference No. (1, 2, 3...)
-      if (match.checkbox && !match.checkbox.checked) {
-        match.checkbox.click();
-      } else if (match.numInput) {
+      if (match.numInput) {
         match.numInput.value = assignedRank;
         match.numInput.dispatchEvent(new Event('input', { bubbles: true }));
         match.numInput.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (match.checkbox && !match.checkbox.checked) {
+        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
       assignedRank++;
       await sleep(60 + Math.random() * 80);
