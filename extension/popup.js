@@ -201,7 +201,6 @@ function handleFile(file) {
 
   } else if (file.name.endsWith('.pdf')) {
     reader.onload = async (e) => {
-      // Flush input at start of async handler
       fileInput.value = "";
       try {
         const typedarray = new Uint8Array(e.target.result);
@@ -215,55 +214,122 @@ function handleFile(file) {
         const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
         
         let parsedList = [];
+        let allLines = [];
 
+        // Step 1: Reconstruct correct line sequence page by page
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
           
-          // BUG FIX: was scanning globally and going BACKWARDS for course name.
-          // Branch name comes AFTER the code in the PDF table (left to right).
-          // Fix: group text items by Y-row, then extract code + course left-to-right per row.
-          const rowMap = {};
-          for (const item of textContent.items) {
-            if (!item.str.trim()) continue;
-            const yKey = Math.round(item.transform[5] / 5) * 5;
-            if (!rowMap[yKey]) rowMap[yKey] = [];
-            rowMap[yKey].push({ x: item.transform[4], text: item.str.trim() });
+          let pageItems = textContent.items
+            .filter(item => item.str.trim())
+            .map(item => ({
+              x: item.transform[4],
+              y: item.transform[5],
+              text: item.str.trim()
+            }));
+            
+          pageItems.sort((a, b) => {
+            if (Math.abs(a.y - b.y) > 5) {
+              return b.y - a.y; // top to bottom
+            }
+            return a.x - b.x; // left to right
+          });
+          
+          allLines.push(...pageItems.map(item => item.text));
+        }
+
+        const coursePhrases = [
+          "computer engineering", "information technology", "artificial intelligence",
+          "data science", "computer science", "robotics", "cyber security", "electrical",
+          "mechanical", "civil", "electronics", "telecommunication", "iot", "internet of things",
+          "aiml", "aids"
+        ];
+        
+        const continuationWords = [
+          "and", "data", "science", "learning", "machine", "cyber",
+          "security", "things", "iot", "internet", "technology", "engineering",
+          "(ai", "ai)", "(artificial", "learning)"
+        ];
+        
+        function cleanCourseName(subLines) {
+          let courseStartIdx = -1;
+          for (let idx = 0; idx < subLines.length; idx++) {
+            let lineLower = subLines[idx].toLowerCase();
+            if (lineLower.includes("college of") || lineLower.includes("institute of") || lineLower.includes("society") || lineLower.includes("trust")) {
+              continue;
+            }
+            if (coursePhrases.some(cp => lineLower.includes(cp))) {
+              courseStartIdx = idx;
+              break;
+            }
           }
           
-          // Sort rows top to bottom
-          const sortedYKeys = Object.keys(rowMap).map(Number).sort((a, b) => b - a);
-          
-          for (const yKey of sortedYKeys) {
-            const rowItems = rowMap[yKey].sort((a, b) => a.x - b.x).map(i => i.text);
-            
-            for (let i = 0; i < rowItems.length; i++) {
-              if (rowItems[i].match(/^\d{4,5}$/) && rowItems[i] !== "2026" && rowItems[i] !== "2027") {
-                const code = rowItems[i];
-                
-                // Collect text AFTER the code in the same row (branch is to the right)
-                let courseParts = [];
-                for (let j = i + 1; j < rowItems.length; j++) {
-                  const part = rowItems[j];
-                  if (part.match(/^\d{4,5}$/)) break;
-                  if (["un-aided", "aided", "government", "autonomous", "pune", "mumbai", "nagpur",
-                       "nashik", "amravati", "akola", "jalgaon", "navi mumbai", "aurangabad"].some(kw => part.toLowerCase() === kw)) break;
-                  if (part.match(/^\d{1,3}$/) && j === i + 1) break;
-                  courseParts.push(part);
-                }
-                
-                const course = courseParts.join(" ").trim();
-                if (course.length > 4) {
-                  parsedList.push({
-                    pdfOrder: parsedList.length + 1,
-                    instituteCode: code,
-                    coursePattern: course
-                  });
+          if (courseStartIdx === -1) {
+            for (let idx = 0; idx < subLines.length; idx++) {
+              let lineLower = subLines[idx].toLowerCase();
+              if (["computer", "technology", "engineering", "science"].some(w => lineLower.includes(w))) {
+                if (!["college", "institute", "society", "trust"].some(x => lineLower.includes(x))) {
+                  courseStartIdx = idx;
                   break;
                 }
               }
             }
           }
+          
+          if (courseStartIdx === -1) return "";
+          
+          let courseParts = [subLines[courseStartIdx]];
+          let j = courseStartIdx + 1;
+          while (j < subLines.length) {
+            let nextLine = subLines[j];
+            let nextLineLower = nextLine.toLowerCase();
+            if (continuationWords.some(w => nextLineLower.includes(w)) && 
+                !["un-aided", "aided", "autonomous", "government"].some(kw => nextLineLower.includes(kw))) {
+              courseParts.push(nextLine);
+              j++;
+            } else {
+              break;
+            }
+          }
+          return courseParts.join(" ").trim();
+        }
+
+        // Step 2: Loop lines to extract codes and course patterns
+        let i = 0;
+        while (i < allLines.length) {
+          let line = allLines[i];
+          if (line.match(/^\d{4,5}$/) && line !== "2026" && line !== "2027") {
+            let code = line;
+            let srNo = null;
+            if (i > 0 && allLines[i-1].match(/^\d{1,3}$/)) {
+              srNo = parseInt(allLines[i-1]);
+            }
+            
+            let j = i + 1;
+            let subLines = [];
+            while (j < allLines.length) {
+              if (allLines[j].match(/^\d{4,5}$/) && allLines[j] !== "2026" && allLines[j] !== "2027") {
+                break;
+              }
+              if (allLines[j].match(/^\d{1,3}$/) && j + 1 < allLines.length && allLines[j+1].match(/^\d{4,5}$/) && allLines[j+1] !== "2026" && allLines[j+1] !== "2027") {
+                break;
+              }
+              subLines.push(allLines[j]);
+              j++;
+            }
+            
+            let course = cleanCourseName(subLines);
+            if (course) {
+              parsedList.push({
+                pdfOrder: srNo || (parsedList.length + 1),
+                instituteCode: code,
+                coursePattern: course
+              });
+            }
+            i = j - 1;
+          }
+          i++;
         }
         
         if (parsedList.length > 0) {
