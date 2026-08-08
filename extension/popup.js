@@ -215,67 +215,16 @@ function handleFile(file) {
         
         let parsedList = [];
 
-        const coursePhrases = [
-          "computer", "information", "artificial", "data", "robotics", "science", "engineering", 
-          "technology", "learning", "machine", "cyber", "security", "things", "iot", "civil", 
-          "mechanical", "electrical", "electronics", "telecommunication", "aids", "aiml", "regional", 
-          "language"
-        ];
-
-        const collegeKeywords = [
-          "college", "institute", "society", "trust", "pratishthan", "prasarini", "association", 
-          "foundation", "education", "vidya", "board", "samaj", "shikshan", "mandals", "mandal",
-          "academy", "campus", "school", "trinity", "vidyarthi", "griha", "mitra", "shikshan",
-          "annasaheb", "chudaman", "patil", "vasantdada", "pote", "ram", "meghe", "dnyanvilas",
-          "d.y.", "dy", "patil", "pyd", "tulsiani", "sawant", "yashoda", "gokhale", "sapat", 
-          "marathwada", "sipna", "indira", "gandhi", "zeal", "sinhgad", "thakare", "saraswati",
-          "jayawant", "tssms", "pdea", "skn", "bhujbal", "knowledge", "dhariwal", "moze", "datta", 
-          "meghe", "trinity", "kj", "k.j.", "k. j.", "ssbt", "lohia", "mes"
-        ];
-
-        const statusKeywords = [
-          "un-aided", "aided", "autonomous", "government", "us", "state level", "state", "level",
-          "home", "university", "other", "than", "minority"
-        ];
-
-        const cities = ["pune", "mumbai", "navi mumbai", "nashik", "amravati", "nagpur", "jalgaon", 
-                  "yewalewadi", "narhe", "kondhwa", "wagholi", "bavdhan", "talegaon", "sion", "hadapsar",
-                  "kusgaon", "adgaon", "warje", "baramati", "kharghar", "airoli", "pisoli", 
-                  "baner", "balewadi", "lohgaon", "badnera", "mahiravani", "rajuri", "dumbarwadi", 
-                  "varale", "lakhewadi", "lonikand", "lonavala", "varvandi", "kuran", "ramtek", 
-                  "indapur", "kalmeshwar", "daund", "chincholi", "badnera", "dombivali", "dongargaon", 
-                  "akola", "babulgaon", "kamshet", "someshwar", "kalamb", "eklahare", "airoli", 
-                  "anjenari", "trimbakeshwar", "nagpur", "jalgaon", "faizpur", "matunga", "wadala", 
-                  "bandra", "airoli", "chinchwad", "vadgaon", "malad", "tathawade", "andheri", 
-                  "vile parle", "nerul", "alandi", "kopargaon", "loni", "shevgaon", "sangamner", 
-                  "shrirampur", "rahuri", "newasa", "shevgaon", "pathardi", "jamkhed", "karjat", 
-                  "shrigonda", "parner", "nagar", "ahmednagar", "bhor", "saswad", "jejuri", "baramati", 
-                  "indapur", "daund", "shirur", "manchar", "khed", "alandi", "dehu", "talegaon", 
-                  "maval", "mulshi", "velhe", "bhor", "purandar", "haveli", "pune", "solapur", 
-                  "barshi", "mohol", "madha", "karmala", "sangola", "malshiras", "pandharpur", 
-                  "mangavedhe", "solapur", "satara", "karad", "wai", "koregaon", "phaltan", 
-                  "dahiwadi", "vaduj", "patan", "satara", "sangli", "miraj", "tasgaon", 
-                  "vita", "khanapur", "shirala", "islampur", "sangli", "kolhapur", "ichalkaranji", 
-                  "jasingpur", "gadhinglaj", "hupari", "kolhapur", "panhala", "shahuwadi", 
-                  "radhanagari", "gargoti", "kagal", "hupari", "gadhinglaj", "alkuti", "ambegaon"];
-
         function extractCourseName(pageItems, codeItem) {
           const rowItems = pageItems.filter(item => {
             const yDiff = item.y - codeItem.y;
             return yDiff >= -25 && yDiff <= 32;
           });
           
+          // Filter ONLY items in the Branch Name column (X between 290 and 415)
+          // This prevents college name (X=142), city (X=426), and status (X=482) from merging
           const branchItems = rowItems.filter(item => {
-            const textLower = item.text.toLowerCase();
-            const hasCourseKW = coursePhrases.some(cp => textLower.includes(cp));
-            if (!hasCourseKW) return false;
-            const hasCollegeKW = collegeKeywords.some(ck => textLower.includes(ck.toLowerCase()));
-            if (hasCollegeKW) return false;
-            const hasStatusKW = statusKeywords.some(sk => textLower.includes(sk));
-            if (hasStatusKW) return false;
-            if (cities.includes(textLower)) return false;
-            if (textLower.match(/^\d+$/)) return false;
-            return true;
+            return item.x >= 290 && item.x <= 415;
           });
           
           branchItems.sort((a, b) => {
