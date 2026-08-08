@@ -104,9 +104,8 @@ async function autoSelectStep1(preferredList) {
 
     if (shouldSelect && !checkbox.checked) {
       checkbox.click();
-      checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       checkedCount++;
-      await sleep(50 + Math.random() * 70);
+      await sleep(120 + Math.random() * 80);
     }
   }
 
@@ -175,10 +174,9 @@ async function autoOrderStep2(preferredList) {
       match.alreadyRanked = true;
       newMatchesCount++;
       
-      // Native click to ensure checkbox toggles AND portal assigns the next preference number
-      if (match.checkbox) {
+      // Single native click so portal's checkpass() runs once cleanly without double clicking
+      if (match.checkbox && !match.checkbox.checked) {
         match.checkbox.click();
-        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       } else if (match.numInput) {
         match.numInput.value = assignedRank;
         match.numInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -186,7 +184,7 @@ async function autoOrderStep2(preferredList) {
       }
       
       assignedRank++;
-      await sleep(70 + Math.random() * 80);
+      await sleep(140 + Math.random() * 80);
     }
   }
 
