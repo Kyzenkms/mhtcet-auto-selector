@@ -111,10 +111,10 @@ async function autoOrderStep2(preferredList) {
   console.log("MHT-CET Auto-Selector: Step 2 Preference Ordering...");
   const rows = Array.from(document.querySelectorAll("table tbody tr"));
 
-  // Guard check: ensure we are on a page with number/text inputs (Step 2)
-  const hasNumberInputs = rows.some(row => row.querySelector("input[type='text'], input[type='number']"));
-  if (!hasNumberInputs) {
-    alert("⚠️ Could not find preference number inputs on this page!\n\nPlease make sure you are on the 'Set Your Preferences' (Step 2) page before running this.");
+  // Guard check: ensure we are on a page with checkboxes or inputs (Step 2)
+  const hasInputs = rows.some(row => row.querySelector("input[type='checkbox'], input[type='text'], input[type='number']"));
+  if (!hasInputs) {
+    alert("⚠️ Could not find preference options on this page!\n\nPlease make sure you are on the 'Set Your Preferences' (Step 2) page before running this.");
     return;
   }
 
@@ -146,13 +146,13 @@ async function autoOrderStep2(preferredList) {
       match.alreadyRanked = true;
       matchesCount++;
       
-      // BUG FIX: was checking checkbox on Step 2 page instead of filling numInput directly
-      if (match.numInput) {
+      // CET Portal Step 2 uses checkboxes: clicking them sets the sequential Preference No. (1, 2, 3...)
+      if (match.checkbox && !match.checkbox.checked) {
+        match.checkbox.click();
+      } else if (match.numInput) {
         match.numInput.value = assignedRank;
         match.numInput.dispatchEvent(new Event('input', { bubbles: true }));
         match.numInput.dispatchEvent(new Event('change', { bubbles: true }));
-      } else if (match.checkbox && !match.checkbox.checked) {
-        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
       assignedRank++;
       await sleep(60 + Math.random() * 80);
@@ -369,14 +369,6 @@ async function autoSearchAndAddMissing(preferredList) {
     return normItem === normSelected || normItem.includes(normSelected) || normSelected.includes(normItem);
   });
 
-  const proceedMsg = `🔍 Extension detected:\n\nCourse Filter: "${selectedCourse}"\nMatching PDF entries: ${relevantItems.length}\nInstitute codes: ${relevantItems.map(i => i.instituteCode).join(', ') || 'none'}\n\nProceed to select these in the table?`;
-  if (!window.confirm(proceedMsg)) return;
-
-  if (relevantItems.length === 0) {
-    alert(`No exact entries found in your uploaded list for:\n"${selectedCourse}"\n\n💡 Smart Advice: If you know a college has this branch, check if your uploaded list uses a different name (e.g. "CSE (AI ML)" vs "AI ML").`);
-    return;
-  }
-
   const pdfCodeSet = new Set(relevantItems.map(item => normCode(item.instituteCode)));
 
   const allTables = Array.from(document.querySelectorAll("table"));
@@ -421,6 +413,26 @@ async function autoSearchAndAddMissing(preferredList) {
     if (idx >= 0) codeColIndex = idx;
   }
 
+  // Count matching visible colleges on screen
+  let visibleMatchesCount = 0;
+  checkboxes.forEach(cb => {
+    const row = cb.closest("tr");
+    if (!row) return;
+    const cells = Array.from(row.querySelectorAll("td"));
+    const rawCode = cells[codeColIndex] ? cells[codeColIndex].innerText.trim() : "";
+    if (rawCode && pdfCodeSet.has(normCode(rawCode))) {
+      visibleMatchesCount++;
+    }
+  });
+
+  const proceedMsg = `🔍 Extension detected:\n\nCourse Filter: "${selectedCourse}"\nMatching entries in your PDF list: ${relevantItems.length}\nColleges currently visible in this search table: ${visibleMatchesCount}\n\nProceed to select these ${visibleMatchesCount} visible colleges on your screen?`;
+  if (!window.confirm(proceedMsg)) return;
+
+  if (relevantItems.length === 0) {
+    alert(`No exact entries found in your uploaded list for:\n"${selectedCourse}"\n\n💡 Smart Advice: If you know a college has this branch, check if your uploaded list uses a different name (e.g. "CSE (AI ML)" vs "AI ML").`);
+    return;
+  }
+
   let checkedCount = 0;
   let skippedAlready = 0;
   
@@ -440,7 +452,11 @@ async function autoSearchAndAddMissing(preferredList) {
     const isMatch = pdfCodeSet.has(rowCode);
 
     if (isMatch) {
-      cb.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      if (cb.click) {
+        cb.click();
+      } else {
+        cb.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      }
       row.style.backgroundColor = "#dcfce7";
       checkedCount++;
       await sleep(50 + Math.random() * 60);
