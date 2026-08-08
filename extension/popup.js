@@ -217,8 +217,8 @@ function handleFile(file) {
 
         function extractCourseName(pageItems, codeItem) {
           const rowItems = pageItems.filter(item => {
-            const yDiff = item.y - codeItem.y;
-            return yDiff >= -25 && yDiff <= 32;
+            const yDiff = Math.abs(item.y - codeItem.y);
+            return yDiff <= 10;
           });
           
           // Filter ONLY items in the Branch Name column (X between 265 and 435)
@@ -239,8 +239,8 @@ function handleFile(file) {
         // Bounding-box serial backtracker to accurately join split numbers like "10" and "0" -> "100"
         function extractSrNo(pageItems, codeItem) {
           const rowSrItems = pageItems.filter(item => {
-            const yDiff = item.y - codeItem.y;
-            return Math.abs(yDiff) < 25 && item.x < 90 && item.text.match(/^\d+$/);
+            const yDiff = Math.abs(item.y - codeItem.y);
+            return yDiff <= 10 && item.x < 75 && item.text.match(/^\d+$/);
           });
           rowSrItems.sort((a, b) => a.x - b.x);
           const srNoStr = rowSrItems.map(i => i.text).join("");
