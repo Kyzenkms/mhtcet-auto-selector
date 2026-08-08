@@ -214,10 +214,95 @@ function handleFile(file) {
         const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
         
         let parsedList = [];
-        let allLines = [];
 
-        // Step 1: Reconstruct correct line sequence page by page
+        const coursePhrases = [
+          "computer", "information", "artificial", "data", "robotics", "science", "engineering", 
+          "technology", "learning", "machine", "cyber", "security", "things", "iot", "civil", 
+          "mechanical", "electrical", "electronics", "telecommunication", "aids", "aiml", "regional", 
+          "language"
+        ];
+
+        const collegeKeywords = [
+          "college", "institute", "society", "trust", "pratishthan", "prasarini", "association", 
+          "foundation", "education", "vidya", "board", "samaj", "shikshan", "mandals", "mandal",
+          "academy", "campus", "school", "trinity", "vidyarthi", "griha", "mitra", "shikshan",
+          "annasaheb", "chudaman", "patil", "vasantdada", "pote", "ram", "meghe", "dnyanvilas",
+          "d.y.", "dy", "patil", "pyd", "tulsiani", "sawant", "yashoda", "gokhale", "sapat", 
+          "marathwada", "sipna", "indira", "gandhi", "zeal", "sinhgad", "thakare", "saraswati",
+          "jayawant", "tssms", "pdea", "skn", "bhujbal", "knowledge", "dhariwal", "moze", "datta", 
+          "meghe", "trinity", "kj", "k.j.", "k. j.", "ssbt", "lohia", "mes"
+        ];
+
+        const statusKeywords = [
+          "un-aided", "aided", "autonomous", "government", "us", "state level", "state", "level",
+          "home", "university", "other", "than", "minority"
+        ];
+
+        const cities = ["pune", "mumbai", "navi mumbai", "nashik", "amravati", "nagpur", "jalgaon", 
+                  "yewalewadi", "narhe", "kondhwa", "wagholi", "bavdhan", "talegaon", "sion", "hadapsar",
+                  "kusgaon", "adgaon", "warje", "baramati", "kharghar", "airoli", "pisoli", 
+                  "baner", "balewadi", "lohgaon", "badnera", "mahiravani", "rajuri", "dumbarwadi", 
+                  "varale", "lakhewadi", "lonikand", "lonavala", "varvandi", "kuran", "ramtek", 
+                  "indapur", "kalmeshwar", "daund", "chincholi", "badnera", "dombivali", "dongargaon", 
+                  "akola", "babulgaon", "kamshet", "someshwar", "kalamb", "eklahare", "airoli", 
+                  "anjenari", "trimbakeshwar", "nagpur", "jalgaon", "faizpur", "matunga", "wadala", 
+                  "bandra", "airoli", "chinchwad", "vadgaon", "malad", "tathawade", "andheri", 
+                  "vile parle", "nerul", "alandi", "kopargaon", "loni", "shevgaon", "sangamner", 
+                  "shrirampur", "rahuri", "newasa", "shevgaon", "pathardi", "jamkhed", "karjat", 
+                  "shrigonda", "parner", "nagar", "ahmednagar", "bhor", "saswad", "jejuri", "baramati", 
+                  "indapur", "daund", "shirur", "manchar", "khed", "alandi", "dehu", "talegaon", 
+                  "maval", "mulshi", "velhe", "bhor", "purandar", "haveli", "pune", "solapur", 
+                  "barshi", "mohol", "madha", "karmala", "sangola", "malshiras", "pandharpur", 
+                  "mangavedhe", "solapur", "satara", "karad", "wai", "koregaon", "phaltan", 
+                  "dahiwadi", "vaduj", "patan", "satara", "sangli", "miraj", "tasgaon", 
+                  "vita", "khanapur", "shirala", "islampur", "sangli", "kolhapur", "ichalkaranji", 
+                  "jasingpur", "gadhinglaj", "hupari", "kolhapur", "panhala", "shahuwadi", 
+                  "radhanagari", "gargoti", "kagal", "hupari", "gadhinglaj", "alkuti", "ambegaon"];
+
+        function extractCourseName(pageItems, codeItem) {
+          const rowItems = pageItems.filter(item => {
+            const yDiff = item.y - codeItem.y;
+            return yDiff >= -25 && yDiff <= 32;
+          });
+          
+          const branchItems = rowItems.filter(item => {
+            const textLower = item.text.toLowerCase();
+            const hasCourseKW = coursePhrases.some(cp => textLower.includes(cp));
+            if (!hasCourseKW) return false;
+            const hasCollegeKW = collegeKeywords.some(ck => textLower.includes(ck.toLowerCase()));
+            if (hasCollegeKW) return false;
+            const hasStatusKW = statusKeywords.some(sk => textLower.includes(sk));
+            if (hasStatusKW) return false;
+            if (cities.includes(textLower)) return false;
+            if (textLower.match(/^\d+$/)) return false;
+            return true;
+          });
+          
+          branchItems.sort((a, b) => {
+            if (Math.abs(a.y - b.y) > 3) {
+              return b.y - a.y;
+            }
+            return a.x - b.x;
+          });
+          
+          return branchItems.map(i => i.text).join(" ").trim();
+        }
+
+        // Bounding-box serial backtracker to accurately join split numbers like "10" and "0" -> "100"
+        function extractSrNo(pageItems, codeItem) {
+          const rowSrItems = pageItems.filter(item => {
+            const yDiff = item.y - codeItem.y;
+            return Math.abs(yDiff) < 25 && item.x < 90 && item.text.match(/^\d+$/);
+          });
+          rowSrItems.sort((a, b) => a.x - b.x);
+          const srNoStr = rowSrItems.map(i => i.text).join("");
+          return srNoStr ? parseInt(srNoStr) : null;
+        }
+
+        // Parse text page by page
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          if (pageNum === 1) continue;
+          
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
           
@@ -229,107 +314,21 @@ function handleFile(file) {
               text: item.str.trim()
             }));
             
-          pageItems.sort((a, b) => {
-            if (Math.abs(a.y - b.y) > 5) {
-              return b.y - a.y; // top to bottom
-            }
-            return a.x - b.x; // left to right
-          });
-          
-          allLines.push(...pageItems.map(item => item.text));
-        }
-
-        const coursePhrases = [
-          "computer engineering", "information technology", "artificial intelligence",
-          "data science", "computer science", "robotics", "cyber security", "electrical",
-          "mechanical", "civil", "electronics", "telecommunication", "iot", "internet of things",
-          "aiml", "aids"
-        ];
-        
-        const continuationWords = [
-          "and", "data", "science", "learning", "machine", "cyber",
-          "security", "things", "iot", "internet", "technology", "engineering",
-          "(ai", "ai)", "(artificial", "learning)"
-        ];
-        
-        function cleanCourseName(subLines) {
-          let courseStartIdx = -1;
-          for (let idx = 0; idx < subLines.length; idx++) {
-            let lineLower = subLines[idx].toLowerCase();
-            if (lineLower.includes("college of") || lineLower.includes("institute of") || lineLower.includes("society") || lineLower.includes("trust")) {
-              continue;
-            }
-            if (coursePhrases.some(cp => lineLower.includes(cp))) {
-              courseStartIdx = idx;
-              break;
-            }
-          }
-          
-          if (courseStartIdx === -1) {
-            for (let idx = 0; idx < subLines.length; idx++) {
-              let lineLower = subLines[idx].toLowerCase();
-              if (["computer", "technology", "engineering", "science"].some(w => lineLower.includes(w))) {
-                if (!["college", "institute", "society", "trust"].some(x => lineLower.includes(x))) {
-                  courseStartIdx = idx;
-                  break;
-                }
+          for (const item of pageItems) {
+            if (item.text.match(/^\d{4,5}$/) && item.text !== "2026" && item.text !== "2027") {
+              const code = item.text;
+              const srNo = extractSrNo(pageItems, item);
+              const course = extractCourseName(pageItems, item);
+              
+              if (course) {
+                parsedList.push({
+                  pdfOrder: srNo || (parsedList.length + 1),
+                  instituteCode: code,
+                  coursePattern: course
+                });
               }
             }
           }
-          
-          if (courseStartIdx === -1) return "";
-          
-          let courseParts = [subLines[courseStartIdx]];
-          let j = courseStartIdx + 1;
-          while (j < subLines.length) {
-            let nextLine = subLines[j];
-            let nextLineLower = nextLine.toLowerCase();
-            if (continuationWords.some(w => nextLineLower.includes(w)) && 
-                !["un-aided", "aided", "autonomous", "government"].some(kw => nextLineLower.includes(kw))) {
-              courseParts.push(nextLine);
-              j++;
-            } else {
-              break;
-            }
-          }
-          return courseParts.join(" ").trim();
-        }
-
-        // Step 2: Loop lines to extract codes and course patterns
-        let i = 0;
-        while (i < allLines.length) {
-          let line = allLines[i];
-          if (line.match(/^\d{4,5}$/) && line !== "2026" && line !== "2027") {
-            let code = line;
-            let srNo = null;
-            if (i > 0 && allLines[i-1].match(/^\d{1,3}$/)) {
-              srNo = parseInt(allLines[i-1]);
-            }
-            
-            let j = i + 1;
-            let subLines = [];
-            while (j < allLines.length) {
-              if (allLines[j].match(/^\d{4,5}$/) && allLines[j] !== "2026" && allLines[j] !== "2027") {
-                break;
-              }
-              if (allLines[j].match(/^\d{1,3}$/) && j + 1 < allLines.length && allLines[j+1].match(/^\d{4,5}$/) && allLines[j+1] !== "2026" && allLines[j+1] !== "2027") {
-                break;
-              }
-              subLines.push(allLines[j]);
-              j++;
-            }
-            
-            let course = cleanCourseName(subLines);
-            if (course) {
-              parsedList.push({
-                pdfOrder: srNo || (parsedList.length + 1),
-                instituteCode: code,
-                coursePattern: course
-              });
-            }
-            i = j - 1;
-          }
-          i++;
         }
         
         if (parsedList.length > 0) {
