@@ -103,6 +103,7 @@ async function autoSelectStep1(preferredList) {
     }
 
     if (shouldSelect && !checkbox.checked) {
+      checkbox.click();
       checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       checkedCount++;
       await sleep(50 + Math.random() * 70);
@@ -124,47 +125,76 @@ async function autoOrderStep2(preferredList) {
     return;
   }
 
-  const orderedTargets = preferredList.map(item => ({
-    code: normCode(item.instituteCode),
-    pattern: item.coursePattern,
-    isDream: false
-  }));
-
+  // 1. Inspect existing manual selections on the page
+  let maxExistingRank = 0;
   let rowItems = rows.map(row => {
     const text = row.innerText;
     const checkbox = row.querySelector("input[type='checkbox']");
     const numInput = row.querySelector("input[type='text'], input[type='number']");
-    return { row, text, checkbox, numInput, alreadyRanked: false };
+    
+    const isChecked = checkbox ? checkbox.checked : false;
+    let rank = 0;
+    
+    if (numInput && numInput.value) {
+      rank = parseInt(numInput.value) || 0;
+    } else if (isChecked) {
+      const cells = Array.from(row.querySelectorAll("td"));
+      const lastCell = cells[cells.length - 1];
+      if (lastCell && lastCell.innerText.trim().match(/^\d+$/)) {
+        rank = parseInt(lastCell.innerText.trim()) || 0;
+      }
+    }
+
+    if (rank > maxExistingRank) maxExistingRank = rank;
+
+    return { row, text, checkbox, numInput, isChecked, rank, alreadyRanked: isChecked };
   });
 
-  let assignedRank = 1;
-  let matchesCount = 0;
+  const orderedTargets = preferredList.map(item => ({
+    code: normCode(item.instituteCode),
+    pattern: item.coursePattern,
+  }));
+
+  let assignedRank = maxExistingRank + 1;
+  let newMatchesCount = 0;
 
   for (const target of orderedTargets) {
+    // Find matching row for this target
     const match = rowItems.find(item => {
-      if (item.alreadyRanked) return false;
       const codeMatch = item.text.includes(target.code) || item.text.includes(target.code.replace(/^0+/, ""));
-      if (target.isDream && codeMatch) return true;
       return codeMatch && matchesCoursePattern(item.text, target.pattern, target.code);
     });
 
     if (match) {
+      // If this row is ALREADY checked by the user, preserve its manual rank!
+      if (match.alreadyRanked || match.isChecked) {
+        console.log(`Skipping already checked row: ${target.code} (${target.pattern}) with manual rank ${match.rank}`);
+        continue;
+      }
+
       match.alreadyRanked = true;
-      matchesCount++;
+      newMatchesCount++;
       
-      if (match.numInput) {
+      // Native click to ensure checkbox toggles AND portal assigns the next preference number
+      if (match.checkbox) {
+        match.checkbox.click();
+        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      } else if (match.numInput) {
         match.numInput.value = assignedRank;
         match.numInput.dispatchEvent(new Event('input', { bubbles: true }));
         match.numInput.dispatchEvent(new Event('change', { bubbles: true }));
-      } else if (match.checkbox && !match.checkbox.checked) {
-        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
+      
       assignedRank++;
-      await sleep(60 + Math.random() * 80);
+      await sleep(70 + Math.random() * 80);
     }
   }
 
-  alert(`MHT-CET Auto-Selector: Successfully set preference order for ${matchesCount} colleges!`);
+  if (maxExistingRank > 0) {
+    alert(`MHT-CET Auto-Selector:\n\n- Detected ${maxExistingRank} existing manual preference(s).\n- Added ${newMatchesCount} NEW preferences in order starting from rank #${maxExistingRank + 1}!`);
+  } else {
+    alert(`MHT-CET Auto-Selector:\n\nSuccessfully set preference order for ${newMatchesCount} colleges!`);
+  }
 }
 
 function verifyPreferences(preferredList) {
