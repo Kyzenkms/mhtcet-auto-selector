@@ -221,10 +221,9 @@ function handleFile(file) {
             return yDiff >= -25 && yDiff <= 32;
           });
           
-          // Filter ONLY items in the Branch Name column (X between 290 and 415)
-          // This prevents college name (X=142), city (X=426), and status (X=482) from merging
+          // Filter ONLY items in the Branch Name column (X between 265 and 435)
           const branchItems = rowItems.filter(item => {
-            return item.x >= 290 && item.x <= 415;
+            return item.x >= 265 && item.x <= 435;
           });
           
           branchItems.sort((a, b) => {
@@ -250,8 +249,6 @@ function handleFile(file) {
 
         // Parse text page by page
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          if (pageNum === 1) continue;
-          
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
           
