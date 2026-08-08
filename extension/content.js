@@ -13,7 +13,6 @@ function normalizeBranchName(text) {
   norm = norm.replace(/ai & ml/g, "aiml");
   
   // Handle the tricky CSE (AI ML) versus AI ML discrepancy
-  // If it contains cse and aiml, we standardize it so it matches better in fuzzy logic
   norm = norm.replace(/computer science and engineering/g, "cse");
   
   norm = norm.replace(/\s+/g, " ");
@@ -43,10 +42,8 @@ function fuzzyMatchCourse(rowText, targetPattern) {
   const normTarget = normalizeBranchName(targetPattern);
   if (!normRow || !normTarget) return false;
   
-  // Basic heuristic: if both contain "ai" and "ml", or similar words
   const getKeywords = (str) => {
     let kw = str.replace(/[()]/g, ' ').split(' ').filter(w => w.length > 2 && w !== "and" && w !== "the" && w !== "engineering" && w !== "technology");
-    // add exact acronyms like aiml
     if (str.includes("aiml") || (str.includes("ai") && str.includes("ml"))) kw.push("aiml");
     if (str.includes("artificial intelligence") || str.includes("ai")) kw.push("ai");
     if (str.includes("computer science") || str.includes("cse")) kw.push("cse");
@@ -62,7 +59,6 @@ function fuzzyMatchCourse(rowText, targetPattern) {
     if (rowKW.includes(kw)) matchCount++;
   }
   
-  // If we have at least one significant overlapping keyword that isn't generic
   return matchCount > 0 && (rowKW.includes("ai") || rowKW.includes("cse") || rowKW.includes("it") || rowKW.includes("data"));
 }
 
@@ -80,7 +76,8 @@ async function autoSelectStep1(preferredList) {
     return;
   }
 
-  let count = 0;
+  // BUG FIX: checkedCount was referenced before declaration
+  let checkedCount = 0;
 
   for (const row of tableRows) {
     const text = row.innerText;
@@ -121,7 +118,6 @@ async function autoOrderStep2(preferredList) {
     return;
   }
 
-  // The final ranked list is exactly what the user provided in the PDF
   const orderedTargets = preferredList.map(item => ({
     code: normCode(item.instituteCode),
     pattern: item.coursePattern,
@@ -150,12 +146,13 @@ async function autoOrderStep2(preferredList) {
       match.alreadyRanked = true;
       matchesCount++;
       
-      if (match.checkbox && !match.checkbox.checked) {
-        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      } else if (match.numInput) {
+      // BUG FIX: was checking checkbox on Step 2 page instead of filling numInput directly
+      if (match.numInput) {
         match.numInput.value = assignedRank;
         match.numInput.dispatchEvent(new Event('input', { bubbles: true }));
         match.numInput.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (match.checkbox && !match.checkbox.checked) {
+        match.checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
       assignedRank++;
       await sleep(60 + Math.random() * 80);
@@ -217,8 +214,6 @@ function verifyPreferences(preferredList) {
       const codeMatch = item.code === normCode(target.instituteCode) || 
                         item.fullText.includes(target.instituteCode) ||
                         item.fullText.includes(normCode(target.instituteCode));
-      // Dream colleges match regardless of branch!
-      if (codeMatch && isDreamCollegeCode(target.instituteCode)) return true;
       return codeMatch && matchesCoursePattern(item.fullText, target.coursePattern, target.instituteCode);
     });
 
@@ -235,7 +230,6 @@ function verifyPreferences(preferredList) {
       });
       
       if (nearMatch && nearMatch.rowEl) {
-        // Only inject if not already injected
         if (!nearMatch.rowEl.previousElementSibling || !nearMatch.rowEl.previousElementSibling.classList.contains("smart-advice-row")) {
           const colSpan = nearMatch.rowEl.children.length;
           const adviceHtml = `
@@ -258,8 +252,8 @@ function verifyPreferences(preferredList) {
     }
   });
 
-  // Filter extra options (excluding dream colleges and matched PDF items)
-  const extra = pageItems.filter(item => !item.matched && item.code !== "N/A" && !isDreamCollegeCode(item.code));
+  // Filter extra options (excluding matched PDF items)
+  const extra = pageItems.filter(item => !item.matched && item.code !== "N/A");
 
   alert(`MHT-CET Verification Summary:\n\n✅ Matched: ${matched.length}\n⚠️ Missing from Page: ${missing.length}\n⚡ Extra on Page: ${extra.length}\n\nClick OK to open detailed report view.`);
 
@@ -300,7 +294,7 @@ function verifyPreferences(preferredList) {
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
             <h3 style="color: #92400e; font-size: 14px; margin: 0;">⚡ Extra / Unmatched on Page (${extra.length})</h3>
-            ${extra.length > 0 ? `<button id="clear-extra-btn" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">🧹 Uncheck & Highlight Extra (${extra.length})</button>` : ''}
+            ${extra.length > 0 ? `<button id="clear-extra-btn" style="background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">🧹 Uncheck &amp; Highlight Extra (${extra.length})</button>` : ''}
           </div>
           ${extra.length === 0 ? '<p style="font-size:12px; color: #166534;">No extra choices selected!</p>' : `
             <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;">
@@ -327,7 +321,7 @@ function verifyPreferences(preferredList) {
       let uncheckCount = 0;
       for (const item of extra) {
         if (item.rowEl) {
-          item.rowEl.style.backgroundColor = "#fee2e2"; // Highlight red
+          item.rowEl.style.backgroundColor = "#fee2e2";
         }
         if (item.checkboxEl && item.checkboxEl.checked) {
           item.checkboxEl.click();
@@ -341,25 +335,20 @@ function verifyPreferences(preferredList) {
   }
 }
 
-// Feature: Auto-Select ONLY in Top Search Results Table (above ADD Selected Options)
+// Feature: Auto-Select ONLY in Top Search Results Table
 async function autoSearchAndAddMissing(preferredList) {
   console.log("MHT-CET Auto-Selector: Auto-selecting matches in top search table...");
 
-  // --- Step 1: Get the selected course from the page dropdown ---
-  // Try multiple strategies to find the Course dropdown
   const allSelects = Array.from(document.querySelectorAll("select"));
   
-  // Strategy 1: find by id/name containing "course"
   let courseSelect = allSelects.find(s => (s.id + " " + s.name).toLowerCase().includes("course"));
   
-  // Strategy 2: find by option text — which select has options like "Computer Engineering"?
   if (!courseSelect) {
     courseSelect = allSelects.find(s => 
       Array.from(s.options).some(o => o.text.toLowerCase().includes("engineering") || o.text.toLowerCase().includes("technology"))
     );
   }
 
-  // Strategy 3: fallback to first select with selectedIndex > 0
   if (!courseSelect) {
     courseSelect = allSelects.find(s => s.selectedIndex > 0);
   }
@@ -375,44 +364,33 @@ async function autoSearchAndAddMissing(preferredList) {
 
   const normSelected = normalizeBranchName(selectedCourse);
 
-  // --- Step 2: Pre-filter PDF list to ONLY entries matching the selected course strictly ---
   const relevantItems = preferredList.filter(item => {
     const normItem = normalizeBranchName(item.coursePattern);
     return normItem === normSelected || normItem.includes(normSelected) || normSelected.includes(normItem);
   });
 
-  // Show confirmation with what was detected — user can cancel if wrong
   const proceedMsg = `🔍 Extension detected:\n\nCourse Filter: "${selectedCourse}"\nMatching PDF entries: ${relevantItems.length}\nInstitute codes: ${relevantItems.map(i => i.instituteCode).join(', ') || 'none'}\n\nProceed to select these in the table?`;
   if (!window.confirm(proceedMsg)) return;
 
   if (relevantItems.length === 0) {
-    // Smart Advice check: are there ANY colleges in the preferred list that match the currently visible rows, even fuzzily?
-    // We'll just alert them with a hint.
     alert(`No exact entries found in your uploaded list for:\n"${selectedCourse}"\n\n💡 Smart Advice: If you know a college has this branch, check if your uploaded list uses a different name (e.g. "CSE (AI ML)" vs "AI ML").`);
     return;
   }
 
-  // Build a Set of normalized codes for O(1) lookup
   const pdfCodeSet = new Set(relevantItems.map(item => normCode(item.instituteCode)));
 
-  // --- Step 3: Find the TOP search results table (first table with checkboxes) ---
   const allTables = Array.from(document.querySelectorAll("table"));
   
-  // Find element with "Select Options of Your Choice" heading to split above/below
-  const pageText = document.body.innerText;
   const headingEl = Array.from(document.querySelectorAll("*")).find(el =>
     el.children.length === 0 && el.innerText && el.innerText.includes("Select Options of Your Choice")
   );
 
-  // Pick the first table that comes BEFORE the shortlist section (or just first table)
   let topSearchTable = null;
   for (const tbl of allTables) {
     const hasCheckboxes = tbl.querySelector("tbody input[type='checkbox']");
     if (!hasCheckboxes) continue;
     if (headingEl) {
-      // Check if table appears before the heading in DOM
       const position = headingEl.compareDocumentPosition(tbl);
-      // DOCUMENT_POSITION_PRECEDING = 2
       if (position & Node.DOCUMENT_POSITION_PRECEDING) {
         topSearchTable = tbl;
         break;
@@ -432,9 +410,8 @@ async function autoSearchAndAddMissing(preferredList) {
     return;
   }
 
-  // Find institute code column index from header
   const headerRow = topSearchTable.querySelector("thead tr") || topSearchTable.querySelector("tbody tr:first-child");
-  let codeColIndex = 1; // default: second column
+  let codeColIndex = 1;
   if (headerRow) {
     const hdrs = Array.from(headerRow.querySelectorAll("th, td"));
     const idx = hdrs.findIndex(h => {
@@ -443,13 +420,10 @@ async function autoSearchAndAddMissing(preferredList) {
     });
     if (idx >= 0) codeColIndex = idx;
   }
-  console.log("Code column index:", codeColIndex);
 
-  // --- Step 4: Loop rows, extract code, check against pdfCodeSet ---
   let checkedCount = 0;
   let skippedAlready = 0;
   
-  // For Smart Advice during auto-search
   const fullPdfCodeSet = new Set(preferredList.map(item => normCode(item.instituteCode)));
 
   for (const cb of checkboxes) {
@@ -471,8 +445,6 @@ async function autoSearchAndAddMissing(preferredList) {
       checkedCount++;
       await sleep(50 + Math.random() * 60);
     } else if (fullPdfCodeSet.has(rowCode)) {
-      // Smart Advice: The institute code is in their list, but wasn't selected because the branch didn't perfectly match.
-      // Make sure we only flag visible rows (important for the mock portal)
       if (row.style.display === "none") continue;
 
       const targetItems = preferredList.filter(item => normCode(item.instituteCode) === rowCode);
@@ -560,12 +532,15 @@ function injectSidebar() {
   // Attach button listeners
   document.getElementById("mhtcet-sidebar-auto").addEventListener("click", () => {
     if (window.currentPreferredList) autoSearchAndAddMissing(window.currentPreferredList);
+    else alert("⚠️ No college list loaded! Please upload your list from the extension popup first.");
   });
   document.getElementById("mhtcet-sidebar-step2").addEventListener("click", () => {
     if (window.currentPreferredList) autoOrderStep2(window.currentPreferredList);
+    else alert("⚠️ No college list loaded! Please upload your list from the extension popup first.");
   });
   document.getElementById("mhtcet-sidebar-verify").addEventListener("click", () => {
     if (window.currentPreferredList) verifyPreferences(window.currentPreferredList);
+    else alert("⚠️ No college list loaded! Please upload your list from the extension popup first.");
   });
 }
 
@@ -573,7 +548,6 @@ function updateSidebarCounter() {
   const counterEl = document.getElementById("mhtcet-sidebar-counter");
   if (!counterEl || !window.currentPreferredList) return;
   
-  // Count visible checked checkboxes in the table
   const checkedBoxes = document.querySelectorAll("table tbody input[type='checkbox']:checked");
   const total = window.currentPreferredList.length;
   
@@ -592,7 +566,7 @@ function addSidebarLog(message, type = "info") {
   const theme = colors[type] || colors.info;
   
   const logDiv = document.createElement("div");
-  logDiv.style.cssText = `padding: 8px; background: ${theme.bg}; border-left: 3px solid ${theme.border}; border-radius: 4px; color: ${theme.color}; animation: fadeIn 0.3s;`;
+  logDiv.style.cssText = `padding: 8px; background: ${theme.bg}; border-left: 3px solid ${theme.border}; border-radius: 4px; color: ${theme.color};`;
   logDiv.innerHTML = message;
   
   logContainer.prepend(logDiv);
@@ -601,8 +575,9 @@ function addSidebarLog(message, type = "info") {
 // Track manual checkbox clicks
 function setupLiveTracking(preferredList) {
   if (window.hasLiveTracking) {
-    // Update the list reference but don't attach another listener
+    // BUG FIX: Update the list reference even when tracking is already set up
     window.currentPreferredList = preferredList;
+    updateSidebarCounter();
     return;
   }
   
@@ -616,37 +591,37 @@ function setupLiveTracking(preferredList) {
       const row = e.target.closest("tr");
       if (!row) return;
 
-      // Extract details
       const cells = Array.from(row.querySelectorAll("td"));
-      if (cells.length < 4) return; // not a valid table row
+      // BUG FIX: was crashing when cells had < 4 columns (e.g. Smart Advice rows)
+      if (cells.length < 2) return;
 
-      // Find code column dynamically (assume 1 if not found)
       let codeColIndex = 1;
-      const headerRow = row.closest("table").querySelector("thead tr");
-      if (headerRow) {
-        const hdrs = Array.from(headerRow.querySelectorAll("th, td"));
-        const idx = hdrs.findIndex(h => {
-          const t = h.innerText.toLowerCase();
-          return t.includes("institute code") || t.includes("code");
-        });
-        if (idx >= 0) codeColIndex = idx;
+      const tableEl = row.closest("table");
+      if (tableEl) {
+        const headerRow = tableEl.querySelector("thead tr");
+        if (headerRow) {
+          const hdrs = Array.from(headerRow.querySelectorAll("th, td"));
+          const idx = hdrs.findIndex(h => {
+            const t = h.innerText.toLowerCase();
+            return t.includes("institute code") || t.includes("code");
+          });
+          if (idx >= 0) codeColIndex = idx;
+        }
       }
 
+      if (!cells[codeColIndex]) return;
       const rawCode = cells[codeColIndex].innerText.trim();
       const code = normCode(rawCode);
-      const courseName = cells[codeColIndex+1] ? cells[codeColIndex+1].innerText.trim() : "";
+      const courseName = cells[codeColIndex + 1] ? cells[codeColIndex + 1].innerText.trim() : "";
 
       if (isChecked) {
-        // Did they select something on their list?
         const match = window.currentPreferredList.find(item => normCode(item.instituteCode) === code && matchesCoursePattern(courseName, item.coursePattern, code));
         
         if (match) {
           addSidebarLog(`<strong>✅ Safe:</strong> You selected ${rawCode} (${courseName}).`, "success");
         } else {
-          // Check if it's a branch mismatch using strict OR fuzzy matching
           const isCodeInList = window.currentPreferredList.find(item => normCode(item.instituteCode) === code);
           if (isCodeInList) {
-            // Is it a fuzzy match (like AI ML vs CSE AI ML)?
             const fuzzyMatch = fuzzyMatchCourse(courseName, isCodeInList.coursePattern);
             if (fuzzyMatch) {
                addSidebarLog(`<strong>💡 Smart Advice:</strong> You selected ${rawCode} (${courseName}). Your list asked for "${isCodeInList.coursePattern}". This looks like a near-match branch. Please verify!`, "warning");
@@ -661,24 +636,25 @@ function setupLiveTracking(preferredList) {
         addSidebarLog(`<em>Unselected ${rawCode}.</em>`, "info");
       }
       
-      // Update counter instantly when checkbox changes
       updateSidebarCounter();
     }
     
     // 2. Handle Dropdown selections (Proactive Assistant)
-    if (e.target.tagName.toLowerCase() === "select" && e.target.id === "courseSelect") {
-        if(e.target.selectedIndex > 0) {
+    // BUG FIX: was only watching id="courseSelect" but the real portal uses different IDs
+    if (e.target.tagName.toLowerCase() === "select") {
+        const opts = Array.from(e.target.options);
+        const hasEngineeringOptions = opts.some(o => o.text.toLowerCase().includes("engineering") || o.text.toLowerCase().includes("technology") || o.text.toLowerCase().includes("science"));
+        if (hasEngineeringOptions && e.target.selectedIndex > 0) {
             const selectedBranch = e.target.options[e.target.selectedIndex].text;
             const normSelected = normalizeBranchName(selectedBranch);
             
-            // Count how many colleges from the user's list offer this specific branch
             const matches = window.currentPreferredList.filter(item => {
                 const normItem = normalizeBranchName(item.coursePattern);
                 return normItem === normSelected || normItem.includes(normSelected) || normSelected.includes(normItem);
             });
             
             if (matches.length > 0) {
-                addSidebarLog(`<strong>🔎 You selected:</strong> ${selectedBranch}.<br>I found <strong>${matches.length} colleges</strong> in your list for this branch!<br><em>Click '⚡ Auto-Select Matches in Table' now, and watch out for Smart Advice!</em>`, "info");
+                addSidebarLog(`<strong>🔎 You selected:</strong> ${selectedBranch}.<br>I found <strong>${matches.length} colleges</strong> in your list for this branch!<br><em>Click '⚡ Auto-Select' now!</em>`, "info");
             } else {
                 addSidebarLog(`<strong>🔎 You selected:</strong> ${selectedBranch}.<br>You have <strong>0 colleges</strong> in your list for this branch.`, "warning");
             }
@@ -701,11 +677,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === "VERIFY_PREFERENCES") {
     verifyPreferences(request.preferredList);
     sendResponse({status: "Verification Started"});
+  } else if (request.action === "INIT_SIDEBAR") {
+    // BUG FIX: INIT_SIDEBAR now properly sets list and injects sidebar
+    if (request.preferredList) {
+      window.currentPreferredList = request.preferredList;
+    }
+    injectSidebar();
+    setupLiveTracking(request.preferredList || window.currentPreferredList || []);
+    updateSidebarCounter();
+    sendResponse({status: "Sidebar Initialized"});
   }
   
-  // Inject sidebar and setup tracking on first message
-  injectSidebar();
-  setupLiveTracking(request.preferredList);
+  // For all other messages that carry a preferredList, inject sidebar and setup tracking
+  if (request.preferredList && request.action !== "INIT_SIDEBAR") {
+    injectSidebar();
+    setupLiveTracking(request.preferredList);
+  }
+  
+  return true; // BUG FIX: return true to keep the message channel open for async responses
 });
-
-// Helper to normalize branch names for STRICT exact branch matching (handles portal formatting quirks)
